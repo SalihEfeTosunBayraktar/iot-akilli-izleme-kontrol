@@ -1,0 +1,1139 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IoT Güvenlik Mimari Rehberi</title>
+<style>
+:root {
+  --ink: #1d2433; --muted: #5b6475; --line: #d3d9e3; --soft: #f5f7fa;
+  --accent: #1f3a5f; --accent-soft: #e8eef7; --teal: #0f766e; --teal-soft: #e5f3f0;
+  --warn: #9a4d06; --warn-soft: #fdf3e3; --bad: #b42318; --bad-soft: #fdecea;
+  --ok: #2f7d32; --ok-soft: #eaf5ea; --violet: #5b3fa3; --violet-soft: #f0ecfa;
+  --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+  --sans: "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; background: #e9edf2; color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+.paper { max-width: 210mm; margin: 24px auto; background: #fff; padding: 16mm 15mm; box-shadow: 0 2px 14px rgba(0,0,0,.12); }
+h1, h2, h3, h4 { color: var(--accent); line-height: 1.25; }
+h1 { font-size: 2em; margin: 0 0 .2em; }
+h2 { font-size: 1.5em; margin: 0 0 .6em; padding-bottom: .3em; border-bottom: 2px solid var(--accent); }
+h2 .num { display: inline-block; min-width: 1.6em; padding: 0 .35em; margin-right: .4em; background: var(--accent); color: #fff; border-radius: 4px; text-align: center; font-size: .85em; }
+h3 { font-size: 1.12em; margin: 1.3em 0 .4em; }
+h3 .num { color: var(--teal); margin-right: .35em; }
+h4 { font-size: 1em; margin: 1em 0 .3em; }
+p { margin: .45em 0; }
+ul, ol { margin: .4em 0 .6em; padding-left: 1.4em; }
+li { margin: .15em 0; }
+code, .mono { font-family: var(--mono); font-size: .88em; background: var(--soft); padding: .05em .3em; border-radius: 3px; }
+pre { font-family: var(--mono); font-size: 12px; line-height: 1.45; background: #f6f8fb; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 4px; padding: 8px 10px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; margin: .5em 0 .8em; }
+pre .file { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; border-bottom: 1px dashed var(--line); padding-bottom: 3px; }
+table { width: 100%; border-collapse: collapse; margin: .5em 0 .9em; font-size: 13px; }
+th, td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+th { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+tr:nth-child(even) td { background: #fafbfd; }
+td code { white-space: nowrap; }
+.why { background: var(--teal-soft); border-left: 4px solid var(--teal); padding: 7px 11px; margin: .6em 0; border-radius: 0 4px 4px 0; font-size: 14px; }
+.why b:first-child { color: var(--teal); }
+.warn { background: var(--warn-soft); border-left: 4px solid var(--warn); padding: 7px 11px; margin: .6em 0; border-radius: 0 4px 4px 0; font-size: 14px; }
+.warn b:first-child { color: var(--warn); }
+.note { background: var(--violet-soft); border-left: 4px solid var(--violet); padding: 7px 11px; margin: .6em 0; border-radius: 0 4px 4px 0; font-size: 14px; }
+figure { margin: .8em 0 1em; text-align: center; }
+figure svg { width: 100%; height: auto; max-height: 235mm; }
+figcaption { font-size: 12.5px; color: var(--muted); margin-top: .3em; }
+.cover { min-height: 245mm; display: flex; flex-direction: column; }
+.cover .sub { font-size: 1.15em; color: var(--muted); margin: 0 0 1.2em; }
+.meta { display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; font-size: 14px; margin: .8em 0 1.4em; }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; }
+.toc { columns: 2; column-gap: 28px; font-size: 14px; padding-left: 1.2em; }
+.toc li { break-inside: avoid; margin: .2em 0; }
+.toc a { color: var(--ink); text-decoration: none; border-bottom: 1px dotted var(--line); }
+.toc a:hover { color: var(--accent); }
+.toc ol { columns: 1; font-size: 13px; color: var(--muted); padding-left: 1.2em; margin: .1em 0 .3em; }
+section.major { margin-top: 2.2em; }
+.qa dt { font-weight: 600; margin-top: .7em; color: var(--accent); }
+.qa dd { margin: .2em 0 0 1.2em; }
+.gloss dt { font-weight: 600; margin-top: .45em; }
+.gloss dd { margin: .1em 0 0 1.2em; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.small { font-size: 13px; color: var(--muted); }
+.tag { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); margin-left: 4px; vertical-align: middle; }
+svg text { font-family: var(--sans); }
+@media (max-width: 760px) {
+  .paper { margin: 0; padding: 16px; box-shadow: none; }
+  .toc { columns: 1; }
+  .two { grid-template-columns: 1fr; }
+  table { font-size: 12px; }
+}
+@page { size: A4; margin: 15mm 14mm 16mm 14mm; }
+@media print {
+  body { background: #fff; font-size: 10.5pt; }
+  .paper { max-width: none; margin: 0; padding: 0; box-shadow: none; }
+  section.major { page-break-before: always; break-before: page; margin-top: 0; }
+  table, figure, pre, .why, .warn, .note, .qa dt, .gloss dt { break-inside: avoid; page-break-inside: avoid; }
+  h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+  a { color: inherit; text-decoration: none; }
+  .cover { min-height: 0; }
+}
+</style>
+</head>
+<body>
+<div class="paper">
+
+<!-- ================= KAPAK ================= -->
+<div class="cover">
+  <h1>IoT Akıllı Güvenlik ve Akıllı Fabrika Sistemi</h1>
+  <p class="sub">Mimari çalışma rehberi: donanım, gömülü yazılım, yerel ağ, PC telemetri ve AWS IoT Core</p>
+  <dl class="meta">
+    <dt>Proje</dt><dd><code>iot-guvenlik</code> (ESP32-S3 merkez + Arduino Nano oda düğümü)</dd>
+    <dt>Hazırlanma tarihi</dt><dd>22 Ekim 2026</dd>
+    <dt>Kaynak</dt><dd>Depodaki gerçek kod: <code>firmware/</code>, <code>libraries/RfPacket/</code>, <code>pc-dashboard/</code>, <code>cloud/</code>, <code>README.md</code></dd>
+    <dt>Hedef okur</dt><dd>Bilgisayar mühendisliği 3. sınıf öğrencisi (çalışma ve sunum için)</dd>
+    <dt>Kapsam dışı</dt><dd>Şifre, anahtar ve sertifika içeren dosyalar (<code>secrets.h</code>, <code>aws_secrets.h</code>, <code>pc-dashboard/config.json</code>, <code>cloud/.certs/</code>) okunmadı ve alıntılanmadı.</dd>
+  </dl>
+  <p class="small">Belgedeki her pin, süre, eşik, uç nokta, MQTT konusu ve JSON alanı koddan alınmıştır. Koddan kesin çıkarılamayan noktalar açıkça "belirsiz" ya da "kodda yok" diye işaretlenmiştir. Kablolamanın adım adım 3B anlatımı için ayrı belge: <code>docs/breadboard-rehberi.html</code>.</p>
+
+  <h3 style="margin-top:1.4em">İçindekiler</h3>
+  <ol class="toc">
+    <li><a href="#s1">Özet ve amaç</a></li>
+    <li><a href="#s2">Genel mimari</a></li>
+    <li><a href="#s3">Donanım</a>
+      <ol><li><a href="#s3-1">Parçalar</a></li><li><a href="#s3-2">Pin tablosu</a></li><li><a href="#s3-3">Elektriksel kararlar</a></li></ol></li>
+    <li><a href="#s4">Merkez (hub) yazılım mimarisi</a>
+      <ol><li><a href="#s4-1">Tasarım ilkeleri</a></li><li><a href="#s4-2">Sınıflar</a></li><li><a href="#s4-3">Bağımlılık diyagramı</a></li><li><a href="#s4-4">Ana döngü</a></li><li><a href="#s4-5">Kurulum portalı (bağlanmamış)</a></li></ol></li>
+    <li><a href="#s5">Alarm durum makinesi</a></li>
+    <li><a href="#s6">433 MHz RF protokolü</a></li>
+    <li><a href="#s7">Oda düğümü (Nano)</a></li>
+    <li><a href="#s8">Yerel web paneli</a></li>
+    <li><a href="#s9">PC kontrol merkezi</a></li>
+    <li><a href="#s10">AWS IoT Core bulut katmanı</a>
+      <ol><li><a href="#s10-1">Kimlik ve bağlantı</a></li><li><a href="#s10-2">Konu yapısı</a></li><li><a href="#s10-3">IoT politikası</a></li><li><a href="#s10-4">IoT Rules ve DynamoDB</a></li><li><a href="#s10-5">Lambda kararı</a></li><li><a href="#s10-6">Device Shadow akışı</a></li><li><a href="#s10-7">Dağıtım betikleri</a></li><li><a href="#s10-8">Yedek ve maliyet</a></li></ol></li>
+    <li><a href="#s11">Teknoloji seçimleri tablosu</a></li>
+    <li><a href="#s12">Donanım sorunları ve dersler</a></li>
+    <li><a href="#s13">Sınav ve sunum soruları</a></li>
+    <li><a href="#s14">Sözlük</a></li>
+    <li><a href="#s15">Ek: Kodda gözlenen tutarsızlıklar</a></li>
+  </ol>
+</div>
+
+<!-- ================= 1 ================= -->
+<section class="major" id="s1">
+<h2><span class="num">1</span>Özet ve amaç</h2>
+<p>Proje, bir odayı ya da küçük bir üretim alanını izleyen iki kartlı bir IoT sistemidir. <b>Arduino Nano</b> üzerindeki <b>oda düğümü</b> hareket (PIR), sıcaklık/nem (DHT11) ve gaz/duman (MQ-2) ölçer ve bunları 433 MHz radyo ile <b>ESP32-S3 merkeze</b> gönderir. Merkez kapı erişimini (RFID kart ve tuş takımı), alarm mantığını, servo ve röleyi yönetir; durumunu Wi-Fi üzerinden üç ayrı hedefe sunar: yerel web paneli, PC'deki telemetri paneli ve AWS IoT Core.</p>
+
+<h3><span class="num">1.1</span>Sistemin işlevleri</h3>
+<table>
+<tr><th style="width:28%">İşlev</th><th>Nasıl yapılıyor</th><th style="width:22%">Ana dosya</th></tr>
+<tr><td>Kart veya şifre ile giriş</td><td>RC522 kart UID'si <code>kAuthorizedCards</code> listesiyle, tuş takımı şifresi <code>Secrets::kDoorPin</code> ile karşılaştırılır. Onayda alarm kapanır, servo kapıyı 5 sn açar. 3 hatalı denemede giriş 30 sn kilitlenir.</td><td><code>AccessControl.cpp</code></td></tr>
+<tr><td>Hareket alarmı</td><td>Sistem kuruluyken (Armed) düğümden gelen hareket bilgisi sireni başlatır.</td><td><code>AlarmSystem.cpp</code></td></tr>
+<tr><td>Gaz alarmı</td><td>Sistem kurulu olmasa da çalışır; gaz seviyesi 100'e ulaşınca açılır, 80'e inince kapanır (histerezis).</td><td><code>AlarmSystem.cpp</code></td></tr>
+<tr><td>433 MHz sensör ağı</td><td>Her okuma tek bir 32 bitlik rc-switch koduna sığdırılır; en fazla 4 düğüm (<code>kMaxNodes</code>), 15 sn sessiz kalan düğüm çevrimdışı sayılır.</td><td><code>RfPacket.h</code>, <code>NodeMonitor.cpp</code></td></tr>
+<tr><td>Yerel web paneli</td><td>ESP32 üzerinde parola korumalı sayfa: <code>http://guvenlik.local</code>; kur/çöz, kapı, röle, modül testi.</td><td><code>WebPanel.cpp</code>, <code>web_page.h</code></td></tr>
+<tr><td>PC telemetri paneli</td><td>Merkez durum JSON'unu 5 sn'de bir PC'ye POST eder; Python sunucusu SQLite'a yazar, grafikli panel sunar.</td><td><code>TelemetryClient.cpp</code>, <code>server.py</code></td></tr>
+<tr><td>AWS IoT Core bulut kararları</td><td>Telemetri MQTT/TLS ile buluta gider; bir Lambda sıcaklık/gaz eşiğine göre Device Shadow üzerinden fan (röle) ve vana (servo) komutu verir.</td><td><code>CloudLink.cpp</code>, <code>cloud/</code></td></tr>
+<tr><td>Modül testi</td><td><code>B</code> tuşu + kart/şifre (veya paneldeki düğme): servo açılıp kapanır, 2 sn bekler, röle 10 sn açık kalır, LED'ler kayan ışıkla yanar.</td><td><code>TestSequence.cpp</code></td></tr>
+<tr><td>Durum LED'leri</td><td>Kırmızı gaz alarmı, sarı hareket, mavi sıcaklık &gt;= 30 °C. Hem merkezde hem düğümde aynı renk düzeni.</td><td><code>IndicatorLeds.h</code>, <code>room_node.ino</code></td></tr>
+<tr><td>Telegram bildirimi</td><td>Hazır ama varsayılan olarak kapalı; token ve chat id boşsa hiçbir şey göndermez.</td><td><code>TelegramNotifier.cpp</code></td></tr>
+</table>
+
+<h3><span class="num">1.2</span>Akıllı fabrika yorumu</h3>
+<p>Aynı donanım bir üretim hücresi olarak da okunabilir. Bulut kodu bu yorumu açıkça kullanır: <code>template.yaml</code> açıklaması "smart-factory hub", MQTT konu öneki <code>factory</code>, Lambda komutları <code>fan</code> ve <code>valve</code> adını taşır.</p>
+<table>
+<tr><th>Bileşen</th><th>Güvenlik yorumu</th><th>Fabrika yorumu</th></tr>
+<tr><td>Röle (GPIO47)</td><td>Lamba, siren ışığı</td><td><b>Havalandırma fanı</b> (Shadow alanı <code>fan</code>: <code>on</code>/<code>off</code>)</td></tr>
+<tr><td>Servo (GPIO21)</td><td>Kapı mandalı</td><td><b>Gaz vanası / havalandırma kapağı</b> (Shadow alanı <code>valve</code>: <code>open</code>/<code>closed</code>)</td></tr>
+<tr><td>MQ-2 + DHT11</td><td>Yangın/duman uyarısı</td><td>Ortam gazı ve ısı izleme</td></tr>
+<tr><td>RFID + tuş takımı</td><td>Kapı girişi</td><td>Yetkili personel girişi</td></tr>
+</table>
+<div class="why"><b>Neden bu yorum?</b> Bulut katmanı "algıla - karar ver - eyleme geçir" döngüsünü göstermek için kurulmuştur. Tehlike algılanınca fanı çalıştırıp kapağı açmak, endüstriyel IoT'nin tipik kapalı döngü kontrol örneğidir ve mevcut iki aktüatörle ek donanım gerektirmeden gösterilebilir.</div>
+</section>
+
+<!-- ================= 2 ================= -->
+<section class="major" id="s2">
+<h2><span class="num">2</span>Genel mimari</h2>
+<p>Sistem üç katmanlıdır: <b>algılama katmanı</b> (Nano oda düğümü), <b>kenar (edge) katmanı</b> (ESP32-S3 merkez; yerel kararları kendisi verir) ve <b>uygulama/bulut katmanı</b> (yerel panel, PC paneli, AWS). Kritik güvenlik kararları (alarm, siren, kilit) kenarda verilir; bulut yalnızca ek, gecikmeye dayanıklı kararlar (fan/vana) üretir.</p>
+
+<figure>
+<svg viewBox="0 0 800 570" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Genel mimari diyagramı">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f3a5f"/></marker>
+  <marker id="arT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0f766e"/></marker>
+  <marker id="arO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9a4d06"/></marker>
+</defs>
+<!-- Nano -->
+<rect x="15" y="55" width="190" height="185" rx="8" fill="#eaf5ea" stroke="#2f7d32" stroke-width="1.5"/>
+<text x="110" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#2f7d32">Arduino Nano</text>
+<text x="110" y="95" text-anchor="middle" font-size="11" fill="#5b6475">oda düğümü (kNodeId = 0)</text>
+<text x="30" y="120" font-size="12">PIR hareket (D2)</text>
+<text x="30" y="138" font-size="12">DHT11 sıcaklık/nem (D4)</text>
+<text x="30" y="156" font-size="12">MQ-2 gaz (A0)</text>
+<text x="30" y="174" font-size="12">LED D6/D7/D8, buzzer D5</text>
+<text x="30" y="192" font-size="12">433 MHz verici (D10)</text>
+<text x="30" y="218" font-size="11" fill="#5b6475">2 sn'de bir veya hareket</text>
+<text x="30" y="232" font-size="11" fill="#5b6475">başlar başlamaz gönderir</text>
+<!-- ESP32 -->
+<rect x="275" y="35" width="225" height="245" rx="8" fill="#e8eef7" stroke="#1f3a5f" stroke-width="1.5"/>
+<text x="387" y="58" text-anchor="middle" font-size="14" font-weight="700" fill="#1f3a5f">ESP32-S3 merkez</text>
+<text x="387" y="75" text-anchor="middle" font-size="11" fill="#5b6475">kenar karar birimi</text>
+<text x="290" y="100" font-size="12">433 MHz alıcı (GPIO1)</text>
+<text x="290" y="118" font-size="12">RC522 RFID (SPI)</text>
+<text x="290" y="136" font-size="12">4x4 tuş takımı</text>
+<text x="290" y="154" font-size="12">16x2 I2C LCD</text>
+<text x="290" y="172" font-size="12">Servo: kapı / vana</text>
+<text x="290" y="190" font-size="12">Röle: fan</text>
+<text x="290" y="208" font-size="12">Buzzer (siren), 3 LED</text>
+<text x="290" y="234" font-size="11" fill="#5b6475">AlarmSystem, AccessControl,</text>
+<text x="290" y="248" font-size="11" fill="#5b6475">WebPanel, TelemetryClient,</text>
+<text x="290" y="262" font-size="11" fill="#5b6475">CloudLink ...</text>
+<!-- RF link -->
+<line x1="205" y1="140" x2="273" y2="140" stroke="#2f7d32" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arT)"/>
+<text x="239" y="128" text-anchor="middle" font-size="11" font-weight="700" fill="#2f7d32">433 MHz</text>
+<text x="239" y="157" text-anchor="middle" font-size="10" fill="#5b6475">32 bit</text>
+<text x="239" y="169" text-anchor="middle" font-size="10" fill="#5b6475">rc-switch</text>
+<!-- Router -->
+<rect x="315" y="325" width="145" height="46" rx="8" fill="#f5f7fa" stroke="#5b6475"/>
+<text x="387" y="345" text-anchor="middle" font-size="12" font-weight="700">Wi-Fi yönlendirici</text>
+<text x="387" y="361" text-anchor="middle" font-size="11" fill="#5b6475">yerel ağ (LAN)</text>
+<line x1="387" y1="280" x2="387" y2="323" stroke="#1f3a5f" stroke-width="2" marker-end="url(#ar)" marker-start="url(#ar)"/>
+<text x="395" y="306" font-size="11" fill="#1f3a5f">Wi-Fi (STA)</text>
+<!-- Phone -->
+<rect x="15" y="430" width="230" height="110" rx="8" fill="#fff" stroke="#1f3a5f"/>
+<text x="130" y="452" text-anchor="middle" font-size="13" font-weight="700" fill="#1f3a5f">Yerel web paneli</text>
+<text x="28" y="472" font-size="11">Telefon / tarayıcı</text>
+<text x="28" y="488" font-size="11">http://guvenlik.local (mDNS)</text>
+<text x="28" y="504" font-size="11">HTTP Basic Auth</text>
+<text x="28" y="520" font-size="11">GET /api/status her 1,5 sn</text>
+<line x1="340" y1="371" x2="160" y2="428" stroke="#1f3a5f" stroke-width="2" marker-end="url(#ar)" marker-start="url(#ar)"/>
+<!-- PC -->
+<rect x="270" y="430" width="235" height="110" rx="8" fill="#fff" stroke="#1f3a5f"/>
+<text x="387" y="452" text-anchor="middle" font-size="13" font-weight="700" fill="#1f3a5f">PC kontrol merkezi</text>
+<text x="283" y="472" font-size="11">server.py (Python stdlib) :8080</text>
+<text x="283" y="488" font-size="11">POST /api/telemetry her 5 sn</text>
+<text x="283" y="504" font-size="11">X-Api-Key başlığı</text>
+<text x="283" y="520" font-size="11">SQLite: samples, events</text>
+<line x1="387" y1="371" x2="387" y2="428" stroke="#1f3a5f" stroke-width="2" marker-end="url(#ar)"/>
+<!-- AWS -->
+<rect x="545" y="15" width="245" height="545" rx="10" fill="#fffaf2" stroke="#9a4d06" stroke-dasharray="7 4" stroke-width="1.5"/>
+<text x="667" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="#9a4d06">AWS (eu-central-1)</text>
+<rect x="560" y="50" width="215" height="60" rx="6" fill="#fdf3e3" stroke="#9a4d06"/>
+<text x="667" y="72" text-anchor="middle" font-size="12" font-weight="700">IoT Core MQTT aracısı</text>
+<text x="667" y="88" text-anchor="middle" font-size="10.5">Thing: hub01, X.509 sertifika</text>
+<text x="667" y="102" text-anchor="middle" font-size="10.5">factory/hub01/telemetry, /events</text>
+<rect x="560" y="140" width="215" height="48" rx="6" fill="#fdf3e3" stroke="#9a4d06"/>
+<text x="667" y="160" text-anchor="middle" font-size="12" font-weight="700">IoT Rules (SQL)</text>
+<text x="667" y="177" text-anchor="middle" font-size="10.5">TelemetryRule, EventsRule</text>
+<rect x="560" y="220" width="100" height="62" rx="6" fill="#fdf3e3" stroke="#9a4d06"/>
+<text x="610" y="242" text-anchor="middle" font-size="12" font-weight="700">DynamoDB</text>
+<text x="610" y="258" text-anchor="middle" font-size="10">2 tablo</text>
+<text x="610" y="272" text-anchor="middle" font-size="10">TTL 7 gün</text>
+<rect x="675" y="220" width="100" height="62" rx="6" fill="#fdf3e3" stroke="#9a4d06"/>
+<text x="725" y="242" text-anchor="middle" font-size="12" font-weight="700">Lambda</text>
+<text x="725" y="258" text-anchor="middle" font-size="10">decide.py</text>
+<text x="725" y="272" text-anchor="middle" font-size="10">histerezis</text>
+<rect x="560" y="320" width="215" height="62" rx="6" fill="#fdf3e3" stroke="#9a4d06"/>
+<text x="667" y="342" text-anchor="middle" font-size="12" font-weight="700">Device Shadow</text>
+<text x="667" y="358" text-anchor="middle" font-size="10.5">desired / reported / delta</text>
+<text x="667" y="372" text-anchor="middle" font-size="10.5">fan, valve</text>
+<rect x="560" y="420" width="215" height="44" rx="6" fill="#fdf3e3" stroke="#9a4d06"/>
+<text x="667" y="440" text-anchor="middle" font-size="12" font-weight="700">CloudWatch Logs</text>
+<text x="667" y="455" text-anchor="middle" font-size="10.5">/aws/lambda/iot-guvenlik-decide</text>
+<text x="667" y="500" text-anchor="middle" font-size="10.5" fill="#5b6475">CloudFormation yığını:</text>
+<text x="667" y="515" text-anchor="middle" font-size="10.5" fill="#5b6475">iot-guvenlik (template.yaml)</text>
+<line x1="667" y1="110" x2="667" y2="138" stroke="#9a4d06" stroke-width="2" marker-end="url(#arO)"/>
+<line x1="620" y1="188" x2="612" y2="218" stroke="#9a4d06" stroke-width="2" marker-end="url(#arO)"/>
+<line x1="715" y1="188" x2="723" y2="218" stroke="#9a4d06" stroke-width="2" marker-end="url(#arO)"/>
+<line x1="715" y1="282" x2="700" y2="318" stroke="#9a4d06" stroke-width="2" marker-end="url(#arO)"/>
+<text x="712" y="305" font-size="10" fill="#9a4d06">desired</text>
+<path d="M775,262 H784 V442 H777" fill="none" stroke="#9a4d06" stroke-width="1.6" marker-end="url(#arO)"/>
+<!-- ESP32 to AWS -->
+<line x1="500" y1="80" x2="558" y2="80" stroke="#9a4d06" stroke-width="2.2" marker-end="url(#arO)"/>
+<text x="504" y="68" font-size="10" font-weight="700" fill="#9a4d06">MQTT/TLS</text>
+<text x="504" y="97" font-size="10" fill="#9a4d06">:8883</text>
+<path d="M558,352 C520,352 520,250 502,250" fill="none" stroke="#9a4d06" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arO)"/>
+<text x="508" y="300" font-size="10" fill="#9a4d06">delta</text>
+<text x="508" y="313" font-size="10" fill="#9a4d06">fan/valve</text>
+</svg>
+<figcaption>Şekil 1. Genel mimari. Yeşil kesikli ok: radyo; lacivert: yerel HTTP; turuncu: AWS (MQTT/TLS internet üzerinden, yerel yönlendiriciden geçer).</figcaption>
+</figure>
+
+<h3><span class="num">2.1</span>Veri yolları özetle</h3>
+<table>
+<tr><th>Yol</th><th>Protokol</th><th>Yön ve sıklık</th><th>Kaynak</th></tr>
+<tr><td>Nano → ESP32</td><td>433 MHz OOK, rc-switch, 32 bit</td><td>Tek yönlü; 2 sn'de bir veya hareket başlangıcında, her kod 4 kez tekrarlanır</td><td><code>room_node/config.h</code></td></tr>
+<tr><td>Tarayıcı ↔ ESP32</td><td>HTTP/1.1, Basic Auth, JSON</td><td>Sayfa 1,5 sn'de bir <code>/api/status</code> sorar</td><td><code>web_page.h</code></td></tr>
+<tr><td>ESP32 → PC</td><td>HTTP POST, JSON, <code>X-Api-Key</code></td><td>5 sn'de bir; hata olursa 30 sn bekler</td><td><code>config.h</code> <code>Telemetry</code></td></tr>
+<tr><td>ESP32 ↔ AWS</td><td>MQTT 3.1.1 / TLS (port 8883), X.509 karşılıklı kimlik</td><td>Telemetri 5 sn'de bir; olaylar oluştukça; Shadow delta buluttan gelir</td><td><code>config.h</code> <code>Cloud</code>, <code>CloudLink.cpp</code></td></tr>
+</table>
+<div class="why"><b>Neden üç ayrı çıkış?</b> Her biri farklı bir ihtiyaca cevap verir ve birbirinden bağımsız çalışır: yerel panel internet ve PC olmadan da çalışan <b>yedek</b> arayüzdür; PC paneli <b>geçmiş veri ve grafik</b> sağlar; AWS <b>uzaktan erişim, kalıcı kayıt ve bulut kararı</b> sağlar. Birinin çökmesi ötekileri etkilemez (kısa zaman aşımları ve geri çekilme sayesinde).</div>
+</section>
+
+<!-- ================= 3 ================= -->
+<section class="major" id="s3">
+<h2><span class="num">3</span>Donanım</h2>
+
+<h3 id="s3-1"><span class="num">3.1</span>Parçalar</h3>
+<table>
+<tr><th>Parça</th><th>Kart</th><th>Görev</th><th>Not</th></tr>
+<tr><td>ESP32-S3 (DevKitC-1 pin düzeni; YD-ESP32-S3 klonu kullanılmış)</td><td>Merkez</td><td>Ana işlemci, Wi-Fi</td><td>USB'den beslenir</td></tr>
+<tr><td>Arduino Nano (ATmega328P)</td><td>Düğüm</td><td>Sensör okuma, RF gönderim</td><td>Gerekirse "Old Bootloader" seçimi</td></tr>
+<tr><td>RC522 RFID okuyucu (13,56 MHz)</td><td>Merkez</td><td>Kart UID okuma</td><td>SPI, 3,3 V</td></tr>
+<tr><td>4x4 membran tuş takımı</td><td>Merkez</td><td>Şifre, <code>A</code> kur, <code>B</code> test, <code>*</code> sil, <code>#</code> onay</td><td>Şerit ters takılı, yazılımda düzeltilmiş</td></tr>
+<tr><td>16x2 LCD + I2C sırt kartı</td><td>Merkez</td><td>Durum ve mesajlar</td><td>Adres 0x27 (olmazsa 0x3F)</td></tr>
+<tr><td>SG90 tipi servo</td><td>Merkez</td><td>Kapı mandalı / vana</td><td>0° kapalı, 90° açık</td></tr>
+<tr><td>Tek kanallı 5 V röle modülü (aktif düşük)</td><td>Merkez</td><td>Fan / lamba</td><td>Open-drain sürülür</td></tr>
+<tr><td>Aktif buzzer + BC547 + 1 kΩ</td><td>Merkez</td><td>Bip ve siren</td><td>Transistörle sürülür</td></tr>
+<tr><td>433 MHz alıcı + 4,7 kΩ / 10 kΩ bölücü</td><td>Merkez</td><td>RF paket alma</td><td>17,3 cm anten teli önerilir</td></tr>
+<tr><td>433 MHz verici</td><td>Düğüm</td><td>RF paket gönderme</td><td></td></tr>
+<tr><td>PIR (HC-SR501 tipi), DHT11, MQ-2</td><td>Düğüm</td><td>Hareket, sıcaklık/nem, gaz</td><td>MQ-2 60 sn ısınır</td></tr>
+<tr><td>Kırmızı/sarı/mavi LED + 220 Ω</td><td>İkisi de</td><td>Gaz / hareket / sıcaklık göstergesi</td><td>pin → uzun bacak, kısa bacak → 220 Ω → GND</td></tr>
+<tr><td>MB102/HW-131 breadboard güç modülü + 12 V adaptör</td><td>Breadboard</td><td>Servo, röle, LCD, RF için 5 V</td><td>Bkz. 3.3</td></tr>
+</table>
+<p class="small">Parça modelleri (SG90, HC-SR501) koddan değil, breadboard rehberi ve README'den çıkarılmıştır; kodda yalnızca pin ve davranış tanımlıdır.</p>
+
+<h3 id="s3-2"><span class="num">3.2</span>Pin tablosu</h3>
+<div class="two">
+<div>
+<h4>Merkez: <code>firmware/security_hub/config.h</code> (<code>Config::Pin</code>)</h4>
+<table>
+<tr><th>Sinyal</th><th>GPIO</th><th>Sabit</th></tr>
+<tr><td>RC522 SS (SDA)</td><td>10</td><td><code>kRfidSs</code></td></tr>
+<tr><td>RC522 MOSI</td><td>11</td><td><code>kRfidMosi</code></td></tr>
+<tr><td>RC522 SCK</td><td>12</td><td><code>kRfidSck</code></td></tr>
+<tr><td>RC522 MISO</td><td>13</td><td><code>kRfidMiso</code></td></tr>
+<tr><td>RC522 RST</td><td>14</td><td><code>kRfidRst</code></td></tr>
+<tr><td>LCD SDA (I2C)</td><td>8</td><td><code>kLcdSda</code></td></tr>
+<tr><td>LCD SCL (I2C)</td><td>9</td><td><code>kLcdScl</code></td></tr>
+<tr><td>Servo sinyali</td><td>21</td><td><code>kServo</code></td></tr>
+<tr><td>Buzzer (BC547 tabanı)</td><td>2</td><td><code>kBuzzer</code></td></tr>
+<tr><td>Röle IN</td><td>47</td><td><code>kRelay</code></td></tr>
+<tr><td>433 MHz alıcı DATA (bölücü üzerinden)</td><td>1</td><td><code>kRfReceiver</code></td></tr>
+<tr><td>LED kırmızı (gaz)</td><td>38</td><td><code>kLedGas</code></td></tr>
+<tr><td>LED sarı (hareket)</td><td>39</td><td><code>kLedMotion</code></td></tr>
+<tr><td>LED mavi (sıcaklık)</td><td>40</td><td><code>kLedTemp</code></td></tr>
+<tr><td>Tuş takımı satırları</td><td>18, 17, 16, 15</td><td><code>keypadRows</code></td></tr>
+<tr><td>Tuş takımı sütunları</td><td>7, 6, 5, 4</td><td><code>keypadCols</code></td></tr>
+</table>
+</div>
+<div>
+<h4>Düğüm: <code>firmware/room_node/config.h</code></h4>
+<table>
+<tr><th>Sinyal</th><th>Pin</th><th>Sabit</th></tr>
+<tr><td>PIR çıkışı</td><td>D2</td><td><code>kPir</code></td></tr>
+<tr><td>DHT11 veri</td><td>D4</td><td><code>kDht</code></td></tr>
+<tr><td>Buzzer</td><td>D5</td><td><code>kBuzzer</code></td></tr>
+<tr><td>433 MHz verici DATA</td><td>D10</td><td><code>kRfTransmitter</code></td></tr>
+<tr><td>Durum LED'i (gönderimde yanar)</td><td>LED_BUILTIN (D13)</td><td><code>kStatusLed</code></td></tr>
+<tr><td>MQ-2 analog çıkış</td><td>A0</td><td><code>kGas</code></td></tr>
+<tr><td>LED kırmızı (gaz)</td><td>D6</td><td><code>kLedGas</code></td></tr>
+<tr><td>LED sarı (hareket)</td><td>D7</td><td><code>kLedMotion</code></td></tr>
+<tr><td>LED mavi (sıcaklık)</td><td>D8</td><td><code>kLedTemp</code></td></tr>
+</table>
+<h4>Diğer donanım sabitleri</h4>
+<table>
+<tr><th>Ayar</th><th>Değer</th></tr>
+<tr><td>LCD adresi / boyut</td><td>0x27, 16x2</td></tr>
+<tr><td>Servo kapalı / açık</td><td>0° / 90°, 50 Hz</td></tr>
+<tr><td>Röle</td><td><code>kActiveLow = true</code></td></tr>
+<tr><td>DHT tipi</td><td>DHT11</td></tr>
+<tr><td>Düğüm kimliği</td><td><code>kNodeId = 0</code> (0..3)</td></tr>
+</table>
+</div>
+</div>
+<div class="note"><b>Tuş takımı notu:</b> <code>config.h</code> yorumuna göre şerit kablo bu yapımda ters takılmıştır; ölçülen tuş haritasına göre satır/sütun pinleri yer değiştirmiş ve ters sıralanmıştır. Donanımı sökmek yerine yazılımda pin dizisinin sırası değiştirilmiştir.</div>
+
+<h3 id="s3-3"><span class="num">3.3</span>Elektriksel kararlar ve nedenleri</h3>
+<table>
+<tr><th style="width:24%">Karar</th><th>Neden</th></tr>
+<tr><td>RC522 ESP32'nin 3V3 pininden beslenir</td><td>RC522 3,3 V'luk bir modüldür; 5 V hattına bağlanırsa bozulur. Lojik seviyesi de ESP32 ile aynı (3,3 V) olduğu için seviye dönüştürücü gerekmez. ESP32'nin 3V3 pininden yalnızca RC522 beslenir.</td></tr>
+<tr><td>RF alıcı çıkışında 4,7 kΩ / 10 kΩ gerilim bölücü</td><td>Alıcı 5 V ile beslenir ve 5 V'luk sinyal verir; ESP32 pinleri 5 V toleranslı değildir. Bölücü çıkışı: V<sub>out</sub> = 5 V × 10k / (4,7k + 10k) ≈ <b>3,40 V</b>. Bu değer ESP32'nin HIGH eşiğinin üstünde, mutlak sınırının altındadır.</td></tr>
+<tr><td>Buzzer BC547 NPN transistörle sürülür (taban direnci 1 kΩ)</td><td>GPIO pininin akım kapasitesi sınırlıdır ve buzzer 5 V ile daha yüksek sesli çalışır. Transistör anahtar görevi görür: pin yalnızca küçük taban akımı verir, buzzer akımı 5 V hattından gelir. 1 kΩ taban akımını sınırlar.</td></tr>
+<tr><td>Röle pini open-drain (<code>OUTPUT_OPEN_DRAIN</code>)</td><td>Aktif düşük 5 V röle modülünü kapatmak için girişinin modülün kendi VCC'sine (5 V) çekilmesi gerekir; ESP32'nin 3,3 V HIGH seviyesi yetmez, röle yarı açık kalabilir. Open-drain modda pin "kapalı" durumda bırakılır (yüksek empedans) ve modülün kendi pull-up direnci girişi 5 V'a çeker. "Açık" durumda pin LOW'a çeker.</td></tr>
+<tr><td>Ortak GND</td><td>ESP32 USB'den, servo/röle/LCD güç modülünden beslenir. Sinyallerin anlamlı olması için tüm toprakların birleşmesi gerekir; aksi halde referans gerilimi tanımsız kalır ve sinyaller okunamaz.</td></tr>
+<tr><td>Güç modülünde iki jumper da <b>5V</b> konumunda</td><td>Modülün iki ucundaki "5V OFF 3.3" başlıkları 3,3 V konumundayken LCD bozuk yazar, RF alıcı ve servo çalışmaz (README). Bu modüller 5 V ister.</td></tr>
+<tr><td>12 V adaptör (README ve breadboard rehberi: "en az 2A")</td><td>Servo hareket anında yüksek akım çeker; röle bobini de akım ister. 9 V pil veya 700 mA USB kablosu servo ile röleyi birlikte taşıyamaz, gerilim çöker ve ESP32 resetlenebilir ya da servo yalnızca tıkırdar. Bu kurulumda 3 A'lik adaptör kullanıldığı belirtilmiştir; koddaki belgelerde alt sınır 2 A yazar.</td></tr>
+<tr><td>Breadboard kenar hatlarında köprüler (29-34 arası)</td><td>830 delikli breadboard'ların çoğunda güç hatları ortadan ikiye bölünür. Köprü olmadan güç modülünün 5 V'u diğer yarıdaki modüllere ulaşmaz. Dört hatta da köprü takılır.</td></tr>
+<tr><td>Servo darbeleri hareketten 700 ms sonra durdurulur</td><td><code>kServoSettleMs</code>: hareket bitince <code>servo_.release()</code> çağrılır; servo sürekli PWM aldığında titreyip vızıldar ve boşa akım çeker.</td></tr>
+<tr><td>LED'ler 220 Ω ile</td><td>Akım sınırlama; LED'i ve pini korur.</td></tr>
+</table>
+</section>
+
+<!-- ================= 4 ================= -->
+<section class="major" id="s4">
+<h2><span class="num">4</span>Merkez (hub) yazılım mimarisi</h2>
+<p>Merkez yazılımı Arduino C++ ile, her donanım veya sorumluluk için ayrı bir sınıf olacak şekilde yazılmıştır. <code>security_hub.ino</code> bir <b>kompozisyon kökü</b>dür: tüm nesneleri global olarak oluşturur, aralarındaki bağlantıları (referanslar ve lambda fonksiyonları) kurar, <code>setup()</code> içinde başlatır ve <code>loop()</code> içinde sırayla günceller.</p>
+
+<h3 id="s4-1"><span class="num">4.1</span>Tasarım ilkeleri</h3>
+<table>
+<tr><th style="width:24%">İlke</th><th>Projede nasıl uygulanıyor</th><th style="width:30%">Neden</th></tr>
+<tr><td>Tek sorumluluk (SRP)</td><td><code>Buzzer</code> yalnızca ses çıkarır, <code>AlarmSystem</code> yalnızca alarm mantığını bilir, <code>StatusReport</code> yalnızca JSON üretir.</td><td>Her sınıf tek başına anlaşılır ve test edilir; değişiklik tek dosyada kalır.</td></tr>
+<tr><td>millis() tabanlı bloklamayan döngü</td><td>Hiçbir sınıf <code>delay()</code> kullanmaz (yalnızca açılıştaki Wi-Fi bağlantısı 250 ms adımlarla bekler). Zamanlamalar "bitiş zamanı" saklanarak yapılır: <code>beepUntil_</code>, <code>closeAt_</code>, <code>flashUntil_</code>, <code>stepEnds_</code>.</td><td>Tek çekirdekli düşünülen döngüde kart okuma, RF alma ve web sunucusu aynı anda yanıt verebilmelidir. 5 sn'lik bir <code>delay()</code> bu sürede gelen RF paketlerini ve tuşları kaçırırdı.</td></tr>
+<tr><td>Taşmaya dayanıklı zaman karşılaştırma</td><td><code>static_cast&lt;int32_t&gt;(millis() - hedef) &gt;= 0</code> kalıbı.</td><td><code>millis()</code> yaklaşık 49,7 günde taşar; işaretli fark kalıbı taşmada da doğru çalışır.</td></tr>
+<tr><td>Merkezi <code>config.h</code></td><td>Tüm pinler, süreler, eşikler, LCD metinleri ve olay mesajları tek dosyada, <code>Config::</code> ad alanları altında.</td><td>Ayar değiştirmek için kod içinde arama gerekmez; "sihirli sayı" yoktur.</td></tr>
+<tr><td>Gizli bilgi ayrımı</td><td>Wi-Fi şifresi, kapı şifresi, panel şifresi, telemetri anahtarı <code>secrets.h</code> içinde (git'e girmez). Şablonu <code>secrets.example.h</code>. AWS sertifikaları <code>aws_secrets.h</code> içinde, <code>deploy.ps1</code> üretir.</td><td>Şifreler depoya sızmaz; <code>SecretsLoader.h</code> dosya yoksa anlaşılır bir derleme hatası verir.</td></tr>
+<tr><td>EventSink ile gevşek bağlılık</td><td>Sınıflar olayları doğrudan log'a ya da Telegram'a yazmaz; kendilerine verilen <code>EventSink</code> fonksiyonunu çağırır.</td><td>Olayın nereye gideceği (log, Telegram, ileride başka bir yer) tek noktada, <code>report()</code> içinde değişir.</td></tr>
+<tr><td>Bağımlılık enjeksiyonu</td><td>Bağımlılıklar yapıcı (constructor) parametresi olarak verilir: <code>AlarmSystem(Buzzer&amp;, EventSink)</code>, <code>WebPanel(Deps)</code>, <code>CloudLink(..., Actuators)</code>.</td><td>Sınıflar global değişken aramaz; kimin kimi kullandığı yapıcıdan okunur.</td></tr>
+</table>
+
+<pre><span class="file">firmware/security_hub/EventSink.h</span>using EventSink = std::function&lt;void(const String&amp; message, bool urgent)&gt;;</pre>
+<pre><span class="file">firmware/security_hub/security_hub.ino</span>void report(const String&amp; message, bool urgent) {
+  eventLog.add(message, urgent);
+  if (urgent) {
+    notifier.send(message);
+  }
+}</pre>
+
+<h3 id="s4-2"><span class="num">4.2</span>Sınıflar ve dosyalar</h3>
+<table>
+<tr><th style="width:18%">Sınıf / dosya</th><th>Sorumluluk</th><th style="width:30%">Etkileşim</th></tr>
+<tr><td><code>AccessControl</code><br><span class="small">.h / .cpp</span></td><td>RC522 kartını ve tuş takımını yoklar; şifre tamponunu tutar (en fazla 8 hane, LCD'de <code>*</code> ile maskeli); 3 hatada 30 sn kilit uygular. Tanımsız kart UID'sini olay olarak yazar.</td><td><code>Display</code>, <code>Buzzer</code> kullanır; <code>Handlers</code> yapısıyla dışarıya <code>onGranted</code>, <code>onArmRequest</code>, <code>onTestRequest</code>, <code>onEvent</code> bildirir.</td></tr>
+<tr><td><code>AlarmSystem</code></td><td>Disarmed/Arming/Armed/Triggered durum makinesi ve her zaman açık gaz alarmı (histerezisli). Siren kararını verir.</td><td><code>Buzzer::setSiren()</code>; olaylar <code>EventSink</code>'e.</td></tr>
+<tr><td><code>Door</code></td><td>Servo mandal: <code>open()</code> 5 sn açıp kendiliğinden kapatır; <code>hold(bool)</code> bulut vana komutu için süresiz açık/kapalı tutar. Hareket sonrası 700 ms'de PWM'i bırakır.</td><td><code>AccessControl</code> (main üzerinden), <code>WebPanel</code>, <code>TestSequence</code>, <code>CloudLink</code>.</td></tr>
+<tr><td><code>Relay</code> <span class="small">(yalnız .h)</span></td><td>Röle çıkışı; aktif düşük modül için open-drain.</td><td><code>WebPanel</code>, <code>TestSequence</code>, <code>CloudLink</code>.</td></tr>
+<tr><td><code>Buzzer</code></td><td>Bloklamayan aktif buzzer: kısa bip (tuş 40 ms, onay 150 ms, ret 800 ms) ve 250 ms aralıkla açılıp kapanan siren.</td><td><code>AccessControl</code>, <code>AlarmSystem</code>.</td></tr>
+<tr><td><code>Display</code></td><td>16x2 I2C LCD: kalıcı durum ekranı + 2,5 sn'lik geçici mesaj (<code>flash</code>). Aynı içerik yeniden çizilmez (titreme olmaz).</td><td><code>AccessControl</code>, main (<code>setStatus</code> her 1 sn).</td></tr>
+<tr><td><code>EventLog</code></td><td>20 kayıtlık halka tampon (<code>kLogCapacity</code>); zaman damgası NTP varsa <code>SS:DD:ss</code>, yoksa <code>+Ns</code>. <code>total()</code> eklenen tüm olayların sayısını tutar.</td><td><code>report()</code> yazar; <code>StatusReport</code> ve <code>CloudLink</code> okur.</td></tr>
+<tr><td><code>NodeMonitor</code></td><td>rc-switch ile 433 MHz kesme tabanlı alım; bit uzunluğu, checksum, sihirli sayı ve düğüm kimliği doğrulanır; 15 sn sessiz düğüm çevrimdışı.</td><td><code>RfPacket::decode</code>; olaylar <code>EventSink</code>'e; <code>IndicatorLeds</code>, <code>StatusReport</code> okur.</td></tr>
+<tr><td><code>StatusReport</code></td><td>Durumu tek bir JSON belgesine çevirir (ArduinoJson). Aynı JSON yerel panel, PC ve AWS'ye gider.</td><td><code>AlarmSystem</code>, <code>NodeMonitor</code>, <code>EventLog</code>, <code>Relay</code>, <code>Door</code> okur.</td></tr>
+<tr><td><code>WebPanel</code></td><td>Port 80'de <code>WebServer</code>; her rota Basic Auth ile korunur; API rotaları işlemden sonra güncel durumu döner.</td><td><code>Deps</code>: alarm, röle, kapı, rapor, test, sink.</td></tr>
+<tr><td><code>TelemetryClient</code></td><td>Durum JSON'unu PC'ye POST eder; başarıda 5 sn, hatada 30 sn sonra tekrar dener; zaman aşımı 800 ms.</td><td><code>StatusReport</code>; <code>HTTPClient</code>.</td></tr>
+<tr><td><code>CloudLink</code></td><td>AWS IoT Core MQTT/TLS bağlantısı; telemetri ve yeni olayları yayınlar; Shadow delta mesajlarını uygular ve <code>reported</code> durumu bildirir.</td><td><code>StatusReport</code>, <code>EventLog</code>; <code>Actuators</code> lambdaları ile <code>Relay</code> ve <code>Door</code>.</td></tr>
+<tr><td><code>TestSequence</code></td><td>Modül testi adımları: AwaitAuth → Servo → Gap → Relay → Leds; bloklamadan ilerler.</td><td><code>Door</code>, <code>Relay</code>, <code>IndicatorLeds</code>, <code>EventSink</code>.</td></tr>
+<tr><td><code>IndicatorLeds</code> <span class="small">(yalnız .h)</span></td><td>Üç durum LED'i: gaz alarmı, herhangi bir çevrimiçi düğümde hareket, sıcaklık &gt;= 30 °C. Test için <code>showOnly(i)</code>.</td><td><code>NodeMonitor</code> okur.</td></tr>
+<tr><td><code>TelegramNotifier</code></td><td>Bot API'ye HTTPS POST. Token/chat id boşsa devre dışı. Sertifika doğrulaması kapalı (<code>setInsecure()</code>, "demo project"). Mesaj başına yaklaşık 1 sn bloklar.</td><td>Yalnızca <code>report()</code> acil olaylarda çağırır.</td></tr>
+<tr><td><code>Format.h</code></td><td><code>format(fmt, ...)</code>: printf benzeri, 160 baytlık tamponla <code>String</code> üretir.</td><td>Config mesajlarındaki <code>%s</code>, <code>%u</code> yer tutucuları için.</td></tr>
+<tr><td><code>SecretsLoader.h</code></td><td><code>__has_include("secrets.h")</code> ile dosyayı ekler; yoksa Türkçe açıklamalı <code>#error</code>.</td><td>Şifre kullanan her .cpp.</td></tr>
+<tr><td><code>config.h</code></td><td>Pin, zamanlama, güvenlik, telemetri, bulut, saat dilimi, ağ, kurulum, yetkili kartlar, LCD metinleri, mesajlar.</td><td>Hemen her dosya.</td></tr>
+<tr><td><code>web_page.h</code></td><td>Yerel panelin HTML/JS'i, <code>PROGMEM</code> içinde ham dize olarak.</td><td><code>WebPanel</code> <code>"/"</code> rotası.</td></tr>
+<tr><td><code>DeviceSettings</code>, <code>SetupPortal</code>, <code>setup_page.h</code></td><td>NVS'de ayar saklama ve telefondan Wi-Fi/AWS ayarı için erişim noktası + captive portal.</td><td>Dosyalar mevcut ama <code>security_hub.ino</code> içinde kullanılmıyor (bkz. 4.5).</td></tr>
+</table>
+
+<h3 id="s4-3"><span class="num">4.3</span>Bağımlılık diyagramı</h3>
+<figure>
+<svg viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sınıf bağımlılık diyagramı">
+<defs>
+  <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6475"/></marker>
+  <marker id="d2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b3fa3"/></marker>
+  <marker id="d3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9a4d06"/></marker>
+</defs>
+<rect x="150" y="8" width="500" height="44" rx="6" fill="#1f3a5f"/>
+<text x="400" y="28" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">security_hub.ino (kompozisyon kökü)</text>
+<text x="400" y="44" text-anchor="middle" font-size="11" fill="#dbe4f0">nesneleri oluşturur, lambdalarla bağlar, setup() / loop() çağırır</text>
+<g stroke="#8a93a3" stroke-width="1.2" fill="none" marker-end="url(#d1)">
+  <line x1="170" y1="110" x2="268" y2="168"/>
+  <line x1="320" y1="110" x2="320" y2="168"/>
+  <line x1="600" y1="104" x2="393" y2="176"/>
+  <line x1="640" y1="110" x2="548" y2="168"/>
+  <line x1="390" y1="190" x2="438" y2="190"/>
+  <line x1="290" y1="210" x2="257" y2="258"/>
+  <line x1="350" y1="210" x2="390" y2="258"/>
+  <path d="M300,210 C326,240 326,330 352,362"/>
+  <path d="M385,210 C470,230 478,320 488,362"/>
+  <line x1="90" y1="300" x2="90" y2="363"/>
+  <line x1="130" y1="300" x2="210" y2="363"/>
+  <line x1="370" y1="300" x2="245" y2="363"/>
+  <line x1="520" y1="300" x2="382" y2="363"/>
+  <line x1="560" y1="300" x2="500" y2="363"/>
+  <line x1="600" y1="300" x2="615" y2="363"/>
+  <line x1="575" y1="365" x2="272" y2="301"/>
+</g>
+<g stroke="#9a4d06" stroke-width="1.3" fill="none" stroke-dasharray="5 3">
+  <path d="M645,110 V330"/>
+  <path d="M645,330 L505,362" marker-end="url(#d3)"/>
+  <path d="M645,330 L392,362" marker-end="url(#d3)"/>
+</g>
+<text x="640" y="243" font-size="10" fill="#9a4d06" text-anchor="middle" transform="rotate(-90 640 243)">Actuators (lambda)</text>
+<g stroke="#5b3fa3" stroke-width="1.3" fill="none">
+  <path d="M90,300 V318 H725" stroke-dasharray="4 3"/>
+  <path d="M250,300 V318 M400,300 V318 M560,300 V318" stroke-dasharray="4 3"/>
+  <path d="M725,318 V302" marker-end="url(#d2)"/>
+  <path d="M725,258 V190 H584" marker-end="url(#d2)"/>
+  <path d="M775,300 V478" marker-end="url(#d2)"/>
+</g>
+<text x="170" y="331" font-size="10" fill="#5b3fa3">EventSink: olaylar report()'a</text>
+<text x="730" y="230" font-size="10" fill="#5b3fa3">add()</text>
+<text x="770" y="440" font-size="10" fill="#5b3fa3" text-anchor="middle" transform="rotate(-90 770 440)">acilse send()</text>
+<g font-size="12" text-anchor="middle">
+  <rect x="40" y="76" width="160" height="34" rx="5" fill="#e8eef7" stroke="#1f3a5f"/><text x="120" y="98">WebPanel</text>
+  <rect x="250" y="76" width="140" height="34" rx="5" fill="#e8eef7" stroke="#1f3a5f"/><text x="320" y="98">TelemetryClient</text>
+  <rect x="600" y="76" width="150" height="34" rx="5" fill="#fdf3e3" stroke="#9a4d06"/><text x="675" y="98">CloudLink</text>
+  <text x="100" y="128" font-size="9.5" fill="#5b6475">Deps: AlarmSystem, Relay, Door,</text>
+  <text x="100" y="140" font-size="9.5" fill="#5b6475">StatusReport, TestSequence, sink</text>
+  <rect x="250" y="170" width="140" height="40" rx="5" fill="#e5f3f0" stroke="#0f766e"/><text x="320" y="188">StatusReport</text><text x="320" y="202" font-size="10" fill="#5b6475">tek JSON üreticisi</text>
+  <rect x="440" y="170" width="140" height="40" rx="5" fill="#e5f3f0" stroke="#0f766e"/><text x="510" y="188">EventLog</text><text x="510" y="202" font-size="10" fill="#5b6475">20 kayıtlık halka</text>
+  <rect x="20" y="260" width="140" height="40" rx="5" fill="#fff" stroke="#1f3a5f"/><text x="90" y="278">AccessControl</text><text x="90" y="292" font-size="10" fill="#5b6475">RFID + tuş</text>
+  <rect x="185" y="260" width="130" height="40" rx="5" fill="#fff" stroke="#1f3a5f"/><text x="250" y="278">NodeMonitor</text><text x="250" y="292" font-size="10" fill="#5b6475">433 MHz alım</text>
+  <rect x="335" y="260" width="130" height="40" rx="5" fill="#fff" stroke="#1f3a5f"/><text x="400" y="278">AlarmSystem</text><text x="400" y="292" font-size="10" fill="#5b6475">durum makinesi</text>
+  <rect x="490" y="260" width="140" height="40" rx="5" fill="#fff" stroke="#1f3a5f"/><text x="560" y="278">TestSequence</text><text x="560" y="292" font-size="10" fill="#5b6475">modül testi</text>
+  <rect x="660" y="260" width="130" height="40" rx="5" fill="#f0ecfa" stroke="#5b3fa3"/><text x="725" y="278">report()</text><text x="725" y="292" font-size="10" fill="#5b6475">EventSink hedefi</text>
+  <rect x="25" y="365" width="130" height="34" rx="5" fill="#f5f7fa" stroke="#5b6475"/><text x="90" y="386">Display</text>
+  <rect x="165" y="365" width="120" height="34" rx="5" fill="#f5f7fa" stroke="#5b6475"/><text x="225" y="386">Buzzer</text>
+  <rect x="300" y="365" width="120" height="34" rx="5" fill="#f5f7fa" stroke="#5b6475"/><text x="360" y="386">Door (servo)</text>
+  <rect x="430" y="365" width="120" height="34" rx="5" fill="#f5f7fa" stroke="#5b6475"/><text x="490" y="386">Relay</text>
+  <rect x="555" y="365" width="130" height="34" rx="5" fill="#f5f7fa" stroke="#5b6475"/><text x="620" y="386">IndicatorLeds</text>
+  <rect x="25" y="455" width="330" height="50" rx="5" fill="#fff" stroke="#c3cad6" stroke-dasharray="4 3"/><text x="190" y="476">config.h · Format.h · SecretsLoader.h</text><text x="190" y="494" font-size="10" fill="#5b6475">neredeyse tüm sınıflar kullanır</text>
+  <rect x="640" y="480" width="150" height="34" rx="5" fill="#f5f7fa" stroke="#5b6475"/><text x="715" y="501">TelegramNotifier</text>
+</g>
+<text x="20" y="535" font-size="10.5" fill="#5b6475">Gri ok: "kullanır" (yapıcıda verilen referans). Turuncu kesikli: CloudLink'in Actuators lambdaları (fan → Relay, vana → Door).</text>
+<text x="20" y="550" font-size="10.5" fill="#5b6475">Mor: AccessControl, NodeMonitor, AlarmSystem, TestSequence ve WebPanel olayları report()'a verir; o da EventLog'a yazar, acilse Telegram'a yollar.</text>
+</svg>
+<figcaption>Şekil 2. Merkez sınıflarının bağımlılıkları. Okunabilirlik için WebPanel'in bağımlılıkları ok yerine kutunun altında listelendi.</figcaption>
+</figure>
+<div class="why"><b>Neden lambda ile bağlantı?</b> <code>AccessControl</code>, kapı açılınca ne olacağını bilmez; yalnızca <code>onGranted(who, method)</code> çağırır. main içindeki lambda alarmı kapatır, olayı yazar ve test bekleniyorsa testi, değilse kapıyı başlatır. Böylece <code>AccessControl</code> ile <code>AlarmSystem</code>/<code>TestSequence</code> arasında doğrudan bağımlılık oluşmaz. Aynı şekilde <code>CloudLink</code> "fan" ve "vana" kavramlarıyla çalışır; bunların röle ve servoya karşılık geldiği yalnızca main'de yazılıdır.</div>
+<pre><span class="file">firmware/security_hub/security_hub.ino</span>CloudLink cloud(statusReport, eventLog, {
+    [](bool on) { relay.set(on); },     // setFan
+    [](bool open) { door.hold(open); }, // setValve
+    [] { return relay.isOn(); },        // fanOn
+    [] { return door.isOpen(); },       // valveOpen
+});</pre>
+
+<h3 id="s4-4"><span class="num">4.4</span>Açılış ve ana döngü</h3>
+<p><b>setup():</b> seri port (115200) → buzzer, röle, LED, kapı, LCD, erişim kontrolü, RF alıcı başlatılır → Wi-Fi'ye en fazla 15 sn (<code>kWifiConnectTimeoutMs</code>) bağlanmaya çalışılır. Başarılıysa NTP saati (<code>pool.ntp.org</code>, saat dilimi <code>&lt;+03&gt;-3</code>), web paneli, mDNS (<code>guvenlik</code>, http/tcp/80) başlar ve IP LCD'de gösterilir. Başarısızsa "çevrimdışı devam ediliyor" olayı yazılır; yerel güvenlik işlevleri yine çalışır.</p>
+<p><b>loop()</b> her turda sırayla:</p>
+<ol>
+<li><code>buzzer.update()</code>, <code>door.update()</code>, <code>display.update()</code>: zaman dolan bip/kapı/mesajları bitirir.</li>
+<li><code>accessControl.update()</code>: kart ve tuş yoklaması.</li>
+<li><code>alarmSystem.update()</code>: Arming süresi dolduysa Armed'a geçer.</li>
+<li><code>nodeMonitor.update()</code>: sessiz düğümleri çevrimdışı yapar.</li>
+<li><code>nodeMonitor.poll(data)</code>: geçerli paket geldiyse <code>onMotion()</code> ve <code>onGasLevel()</code>.</li>
+<li><code>testSequence.update()</code>; test çalışmıyorsa <code>indicators.update()</code>.</li>
+<li><code>panel.handle()</code>, <code>telemetry.update()</code>, <code>cloud.update()</code>: ağ işleri.</li>
+<li>Her 1 sn (<code>kLcdRefreshMs</code>) LCD durum satırları yenilenir.</li>
+</ol>
+<div class="why"><b>Neden bu sıra?</b> Güvenlik açısından kritik işler (giriş, alarm, RF) ağ işlerinden önce gelir. Ağ işleri kısa zaman aşımlarıyla sınırlandırılmıştır (PC için 800 ms), böylece en kötü durumda bile döngü hızlı döner.</div>
+
+<h3 id="s4-5"><span class="num">4.5</span>Kurulum portalı (kodda var, bağlanmamış)</h3>
+<p><code>DeviceSettings</code> Wi-Fi, AWS uç noktası, thing adı, konu öneki, üç PEM sertifika alanı ve telemetri URL'sini ESP32'nin kalıcı belleğinde (NVS, <code>Preferences</code>, ad alanı <code>settings</code>) saklar; kayıt yoksa derleme zamanı değerlerine (secrets.h, aws_secrets.h, config.h) düşer. <code>SetupPortal</code> <code>Guvenlik-Kurulum-XXXX</code> adlı bir erişim noktası (192.168.4.1), DNS ile "captive portal" yönlendirmesi, <code>/setup</code>, <code>/setup/scan</code>, <code>/setup/save</code> rotaları sunar; PEM alanlarını <code>-----BEGIN</code>/<code>-----END</code> varlığıyla doğrular, kaydettikten 2 sn sonra yeniden başlar. <code>config.h</code> içinde bununla ilgili sabitler (<code>Timing::kSetupWindowMs</code> = 180 sn, <code>Keypad4x4::kSetup = 'D'</code>, <code>Setup::</code>) bulunur.</p>
+<div class="warn"><b>Durum:</b> Mevcut <code>security_hub.ino</code> bu sınıfları oluşturmuyor; Wi-Fi doğrudan <code>Secrets::kWifiSsid</code> ile, AWS doğrudan <code>aws_secrets.h</code> ile yapılandırılıyor ve <code>AccessControl</code> <code>D</code> tuşunu işlemiyor. Bu özellik yarım kalmış ya da ayrı bir dalda geliştirilen bir çalışma gibi görünüyor. Sunumda "planlanan özellik" olarak anlatılmalıdır. Ayrıca bkz. Ek, madde 1-2.</div>
+</section>
+
+<!-- ================= 5 ================= -->
+<section class="major" id="s5">
+<h2><span class="num">5</span>Alarm durum makinesi</h2>
+<p><code>AlarmSystem</code> iki bağımsız mantık içerir: <b>hırsız alarmı</b> için dört durumlu bir sonlu durum makinesi (<code>enum class AlarmState { Disarmed, Arming, Armed, Triggered }</code>) ve <b>gaz alarmı</b> için iki durumlu histerezisli bir bayrak (<code>gasAlarm_</code>). Siren bu ikisinin VEYA'sıdır.</p>
+<figure>
+<svg viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Alarm durum makinesi">
+<defs><marker id="sm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1d2433"/></marker></defs>
+<text x="20" y="24" font-size="13" font-weight="700" fill="#1f3a5f">A) Hırsız alarmı (AlarmState)</text>
+<circle cx="40" cy="125" r="7" fill="#1d2433"/>
+<line x1="47" y1="125" x2="68" y2="125" stroke="#1d2433" stroke-width="1.5" marker-end="url(#sm)"/>
+<rect x="70" y="95" width="150" height="60" rx="30" fill="#f5f7fa" stroke="#5b6475" stroke-width="2"/>
+<text x="145" y="121" text-anchor="middle" font-size="14" font-weight="700">Disarmed</text>
+<text x="145" y="139" text-anchor="middle" font-size="10.5" fill="#5b6475">"disarmed"</text>
+<rect x="320" y="95" width="150" height="60" rx="30" fill="#fdf3e3" stroke="#9a4d06" stroke-width="2"/>
+<text x="395" y="121" text-anchor="middle" font-size="14" font-weight="700">Arming</text>
+<text x="395" y="139" text-anchor="middle" font-size="10.5" fill="#5b6475">"arming", çıkış süresi</text>
+<rect x="580" y="95" width="150" height="60" rx="30" fill="#eaf5ea" stroke="#2f7d32" stroke-width="2"/>
+<text x="655" y="121" text-anchor="middle" font-size="14" font-weight="700">Armed</text>
+<text x="655" y="139" text-anchor="middle" font-size="10.5" fill="#5b6475">"armed"</text>
+<rect x="580" y="250" width="150" height="60" rx="30" fill="#fdecea" stroke="#b42318" stroke-width="2"/>
+<text x="655" y="276" text-anchor="middle" font-size="14" font-weight="700" fill="#b42318">Triggered</text>
+<text x="655" y="294" text-anchor="middle" font-size="10.5" fill="#5b6475">"triggered", siren</text>
+<line x1="220" y1="118" x2="318" y2="118" stroke="#1d2433" stroke-width="1.6" marker-end="url(#sm)"/>
+<text x="269" y="98" text-anchor="middle" font-size="11">arm(by)</text>
+<text x="269" y="85" text-anchor="middle" font-size="10" fill="#5b6475">'A' tuşu / POST /api/arm</text>
+<line x1="470" y1="118" x2="578" y2="118" stroke="#1d2433" stroke-width="1.6" marker-end="url(#sm)"/>
+<text x="524" y="98" text-anchor="middle" font-size="11">update(): 10 sn doldu</text>
+<text x="524" y="85" text-anchor="middle" font-size="10" fill="#5b6475">kArmDelayMs = 10000</text>
+<line x1="655" y1="155" x2="655" y2="248" stroke="#1d2433" stroke-width="1.6" marker-end="url(#sm)"/>
+<text x="663" y="200" font-size="11">onMotion()</text>
+<text x="663" y="214" font-size="10" fill="#5b6475">düğümde hareket</text>
+<!-- disarm transitions -->
+<path d="M395,155 C395,200 200,200 160,157" fill="none" stroke="#1f3a5f" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#sm)"/>
+<path d="M630,95 C560,30 220,30 160,93" fill="none" stroke="#1f3a5f" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#sm)"/>
+<path d="M580,285 C380,300 160,280 135,157" fill="none" stroke="#1f3a5f" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#sm)"/>
+<text x="520" y="24" text-anchor="middle" font-size="11" fill="#1f3a5f">disarm(by): kart / şifre / POST /api/disarm</text>
+<text x="280" y="212" text-anchor="middle" font-size="11" fill="#1f3a5f">disarm(by)</text>
+<text x="330" y="305" text-anchor="middle" font-size="11" fill="#1f3a5f">disarm(by) — siren susar (gaz yoksa)</text>
+<text x="20" y="345" font-size="10.5" fill="#5b6475">Arming sırasında gelen hareket yok sayılır (onMotion yalnızca Armed'da etkili). Triggered kendiliğinden bitmez, yalnızca disarm ile çıkılır.</text>
+<line x1="20" y1="362" x2="780" y2="362" stroke="#d3d9e3"/>
+<text x="20" y="388" font-size="13" font-weight="700" fill="#1f3a5f">B) Gaz alarmı (gasAlarm_, sistem durumundan bağımsız)</text>
+<rect x="110" y="420" width="170" height="56" rx="28" fill="#eaf5ea" stroke="#2f7d32" stroke-width="2"/>
+<text x="195" y="445" text-anchor="middle" font-size="13" font-weight="700">Normal</text>
+<text x="195" y="462" text-anchor="middle" font-size="10.5" fill="#5b6475">gasAlarm_ = false</text>
+<rect x="500" y="420" width="170" height="56" rx="28" fill="#fdecea" stroke="#b42318" stroke-width="2"/>
+<text x="585" y="445" text-anchor="middle" font-size="13" font-weight="700" fill="#b42318">Gaz alarmı</text>
+<text x="585" y="462" text-anchor="middle" font-size="10.5" fill="#5b6475">siren + kırmızı LED</text>
+<path d="M280,435 C360,405 420,405 498,435" fill="none" stroke="#1d2433" stroke-width="1.6" marker-end="url(#sm)"/>
+<text x="390" y="403" text-anchor="middle" font-size="11">seviye &gt;= 100 (kGasAlarmLevel)</text>
+<path d="M500,463 C420,495 360,495 282,463" fill="none" stroke="#1d2433" stroke-width="1.6" marker-end="url(#sm)"/>
+<text x="390" y="505" text-anchor="middle" font-size="11">seviye &lt;= 80 (kGasClearLevel)</text>
+<text x="700" y="440" font-size="10.5" fill="#5b6475">81..99 arası:</text>
+<text x="700" y="455" font-size="10.5" fill="#5b6475">durum korunur</text>
+</svg>
+<figcaption>Şekil 3. Alarm durum makinesi ve gaz histerezisi. Siren = (state == Triggered) VEYA gasAlarm_ (<code>refreshSiren()</code>).</figcaption>
+</figure>
+<pre><span class="file">firmware/security_hub/AlarmSystem.cpp</span>void AlarmSystem::onGasLevel(uint8_t level) {
+  if (!gasAlarm_ &amp;&amp; level &gt;= Config::Security::kGasAlarmLevel) {        // 100
+    gasAlarm_ = true;  refreshSiren(); sink_(format(Config::Msg::kGas, level), true);
+  } else if (gasAlarm_ &amp;&amp; level &lt;= Config::Security::kGasClearLevel) {  // 80
+    gasAlarm_ = false; refreshSiren(); sink_(Config::Msg::kGasClear, true);
+  }
+}</pre>
+<div class="why"><b>Neden histerezis?</b> Sensör değeri tam eşik etrafında (ör. 99-101) gürültüyle dalgalanırsa tek eşikli bir alarm saniyede birkaç kez açılıp kapanır, siren kesik kesik öter ve olay kaydı dolar. İki eşik (açma 100, kapama 80) arasında 20 birimlik bir "ölü bant" bırakarak durum kararlı tutulur.</div>
+<div class="why"><b>Neden gaz alarmı durumdan bağımsız?</b> Gaz/duman, kimse evde değilken de evdeyken de tehlikelidir. Hırsız alarmı ise yalnızca sistem kurulduğunda anlamlıdır. Bu yüzden gaz mantığı state makinesinin dışında tutulmuştur.</div>
+<div class="why"><b>Neden Arming (çıkış süresi)?</b> Sistemi kuran kişinin odadan çıkması için 10 sn verilir; bu sürede kendi hareketi alarmı tetiklemez.</div>
+<div class="note"><b>Dikkat:</b> Kodda "giriş süresi" (entry delay) yok: Armed durumdayken hareket algılanır algılanmaz Triggered olur. Ayrıca kurma (<code>A</code>) kimlik doğrulama istemez, çözme ister. Bu, birçok ticari alarm panelinde de olan bilinçli bir tercih olabilir ama kodda açıklanmamıştır.</div>
+</section>
+
+<!-- ================= 6 ================= -->
+<section class="major" id="s6">
+<h2><span class="num">6</span>433 MHz RF protokolü (<code>RfPacket</code>)</h2>
+<p><code>libraries/RfPacket/src/RfPacket.h</code> iki kartın da derlediği tek başlık dosyalı bir Arduino kütüphanesidir. Bir sensör okumasının tamamı <b>tek bir 32 bitlik rc-switch koduna</b> paketlenir.</p>
+<pre><span class="file">libraries/RfPacket/src/RfPacket.h</span>// Layout (MSB -&gt; LSB): magic(3) node(2) motion(1) gas(8) temp(7) hum(7) checksum(4)
+struct SensorData { uint8_t nodeId; bool motion; uint8_t gasLevel; uint8_t temperature; uint8_t humidity; };
+constexpr unsigned int kBitLength = 32;
+constexpr uint32_t kMagic = 0b101;</pre>
+
+<figure>
+<svg viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RF paket bit yerleşimi">
+<g font-size="10" text-anchor="middle" fill="#5b6475">
+<text x="44" y="22">31</text><text x="66" y="22">30</text><text x="88" y="22">29</text><text x="110" y="22">28</text><text x="132" y="22">27</text><text x="154" y="22">26</text><text x="176" y="22">25</text><text x="198" y="22">24</text><text x="220" y="22">23</text><text x="242" y="22">22</text><text x="264" y="22">21</text><text x="286" y="22">20</text><text x="308" y="22">19</text><text x="330" y="22">18</text><text x="352" y="22">17</text><text x="374" y="22">16</text><text x="396" y="22">15</text><text x="418" y="22">14</text><text x="440" y="22">13</text><text x="462" y="22">12</text><text x="484" y="22">11</text><text x="506" y="22">10</text><text x="528" y="22">9</text><text x="550" y="22">8</text><text x="572" y="22">7</text><text x="594" y="22">6</text><text x="616" y="22">5</text><text x="638" y="22">4</text><text x="660" y="22">3</text><text x="682" y="22">2</text><text x="704" y="22">1</text><text x="726" y="22">0</text>
+</g>
+<!-- fields: x start 33, cell 22 -->
+<rect x="33" y="30" width="66" height="44" fill="#f0ecfa" stroke="#5b3fa3"/>
+<rect x="99" y="30" width="44" height="44" fill="#e8eef7" stroke="#1f3a5f"/>
+<rect x="143" y="30" width="22" height="44" fill="#fdf3e3" stroke="#9a4d06"/>
+<rect x="165" y="30" width="176" height="44" fill="#fdecea" stroke="#b42318"/>
+<rect x="341" y="30" width="154" height="44" fill="#fff3e0" stroke="#c2410c"/>
+<rect x="495" y="30" width="154" height="44" fill="#e5f3f0" stroke="#0f766e"/>
+<rect x="649" y="30" width="88" height="44" fill="#eaf5ea" stroke="#2f7d32"/>
+<g stroke="#d3d9e3"><line x1="55" y1="30" x2="55" y2="74"/><line x1="77" y1="30" x2="77" y2="74"/><line x1="121" y1="30" x2="121" y2="74"/>
+<line x1="187" y1="30" x2="187" y2="74"/><line x1="209" y1="30" x2="209" y2="74"/><line x1="231" y1="30" x2="231" y2="74"/><line x1="253" y1="30" x2="253" y2="74"/><line x1="275" y1="30" x2="275" y2="74"/><line x1="297" y1="30" x2="297" y2="74"/><line x1="319" y1="30" x2="319" y2="74"/>
+<line x1="363" y1="30" x2="363" y2="74"/><line x1="385" y1="30" x2="385" y2="74"/><line x1="407" y1="30" x2="407" y2="74"/><line x1="429" y1="30" x2="429" y2="74"/><line x1="451" y1="30" x2="451" y2="74"/><line x1="473" y1="30" x2="473" y2="74"/>
+<line x1="517" y1="30" x2="517" y2="74"/><line x1="539" y1="30" x2="539" y2="74"/><line x1="561" y1="30" x2="561" y2="74"/><line x1="583" y1="30" x2="583" y2="74"/><line x1="605" y1="30" x2="605" y2="74"/><line x1="627" y1="30" x2="627" y2="74"/>
+<line x1="671" y1="30" x2="671" y2="74"/><line x1="693" y1="30" x2="693" y2="74"/><line x1="715" y1="30" x2="715" y2="74"/></g>
+<g font-size="11.5" font-weight="700" text-anchor="middle">
+<text x="66" y="50">magic</text><text x="66" y="66" font-weight="400" font-size="10">3 bit</text>
+<text x="121" y="50">node</text><text x="121" y="66" font-weight="400" font-size="10">2</text>
+<text x="154" y="50" font-size="9">M</text><text x="154" y="66" font-weight="400" font-size="10">1</text>
+<text x="253" y="50">gas (gaz)</text><text x="253" y="66" font-weight="400" font-size="10">8 bit, 0..255</text>
+<text x="418" y="50">temp (°C)</text><text x="418" y="66" font-weight="400" font-size="10">7 bit, 0..127</text>
+<text x="572" y="50">hum (%)</text><text x="572" y="66" font-weight="400" font-size="10">7 bit, 0..100</text>
+<text x="693" y="50">checksum</text><text x="693" y="66" font-weight="400" font-size="10">4 bit</text>
+</g>
+<path d="M33,84 V92 H649 V84" fill="none" stroke="#5b6475"/>
+<text x="341" y="107" text-anchor="middle" font-size="11" fill="#5b6475">body = 28 bit = 7 adet 4 bitlik nibble (checksum bunların XOR'u)</text>
+<!-- example -->
+<text x="33" y="140" font-size="12" font-weight="700" fill="#1f3a5f">Örnek: düğüm 0, hareket var, gaz 45, 24 °C, %50 nem</text>
+<g font-family="Consolas, monospace" font-size="13" text-anchor="middle">
+<text x="66" y="166" fill="#5b3fa3">1 0 1</text><text x="121" y="166" fill="#1f3a5f">0 0</text><text x="154" y="166" fill="#9a4d06">1</text>
+<text x="253" y="166" fill="#b42318">0 0 1 0 1 1 0 1</text><text x="418" y="166" fill="#c2410c">0 0 1 1 0 0 0</text>
+<text x="572" y="166" fill="#0f766e">0 1 1 0 0 1 0</text><text x="693" y="166" fill="#2f7d32">1 1 0 0</text>
+</g>
+<g font-size="10.5" text-anchor="middle" fill="#5b6475">
+<text x="66" y="184">0b101</text><text x="121" y="184">0</text><text x="154" y="184">1</text><text x="253" y="184">45</text><text x="418" y="184">24</text><text x="572" y="184">50</text><text x="693" y="184">12</text>
+</g>
+<text x="33" y="214" font-size="12">Gönderilen kod: <tspan font-family="Consolas, monospace" font-weight="700">0xA4B4C32C</tspan> (ondalık 2763309868), 32 bit.</text>
+<text x="33" y="234" font-size="11" fill="#5b6475">Checksum: body = 0xA4B4C32 → nibble'lar A,4,B,4,C,3,2; XOR = 0xC = 12.</text>
+</svg>
+<figcaption>Şekil 4. RfPacket bit yerleşimi (MSB solda) ve örnek kodlama.</figcaption>
+</figure>
+
+<h3><span class="num">6.1</span>Kodlama ve çözme</h3>
+<pre><span class="file">libraries/RfPacket/src/RfPacket.h</span>inline uint8_t checksum(uint32_t body) {
+  uint8_t sum = 0;
+  for (uint8_t i = 0; i &lt; 7; ++i) sum ^= (body &gt;&gt; (i * 4)) &amp; 0x0F;
+  return sum;
+}
+inline bool decode(uint32_t raw, SensorData&amp; out) {
+  const uint32_t body = raw &gt;&gt; 4;
+  if ((raw &amp; 0x0F) != checksum(body) || (body &gt;&gt; 25) != kMagic) return false;
+  ...</pre>
+<p>Alıcı tarafta (<code>NodeMonitor::poll</code>) bir paket şu dört kontrolden geçerse kabul edilir: (1) alınan bit uzunluğu 32, (2) checksum tutuyor, (3) üst 3 bit <code>101</code>, (4) düğüm kimliği &lt; 4.</p>
+
+<h3><span class="num">6.2</span>Tasarım kararları</h3>
+<table>
+<tr><th style="width:24%">Karar</th><th>Neden</th></tr>
+<tr><td>433 MHz ISM bandı, ucuz OOK modüller</td><td>Lisans gerektirmez, modüller çok ucuzdur, duvar geçirgenliği 2,4 GHz'e göre iyidir; Nano'da Wi-Fi yoktur. Dezavantaj: tek yönlü, şifresiz, onay (ACK) yok.</td></tr>
+<tr><td>rc-switch kütüphanesi</td><td>Hem AVR (Nano) hem ESP32'de çalışır, kesme tabanlı alım yapar, bir tamsayıyı (en çok 32 bit) doğrudan gönderir. Kullanımı tek satırdır: <code>rf.send(kod, 32)</code>. RadioHead (RH_ASK) daha esnek paketler sunar ama zamanlayıcı kullanımı ESP32/servo kütüphaneleriyle çakışabilir ve kurulumu daha ağırdır.</td></tr>
+<tr><td>Tüm okuma tek 32 bitlik koda sığdırılır</td><td>rc-switch'in doğal birimi tek bir koddur; çok parçalı paketlerde parçalardan biri kaybolursa okuma bozulur. Alan genişlikleri gerçek aralıklara göre seçilmiştir (düğüm 0..3 → 2 bit, nem 0..100 → 7 bit).</td></tr>
+<tr><td>Sihirli sayı (<code>101</code>)</td><td>Ortamdaki başka 433 MHz cihazların (kapı zili, uzaktan kumanda) kodlarını ayıklar.</td></tr>
+<tr><td>4 bitlik XOR checksum</td><td>Gürültüden bozulmuş bitleri yakalar. 4 bit olduğu için rastgele bir kodun geçme olasılığı 1/16; sihirli sayı (1/8) ve bit uzunluğu kontrolüyle birlikte yanlış kabul olasılığı çok düşer. Güçlü değildir ama 32 bitlik bütçede makul bir uzlaşmadır.</td></tr>
+<tr><td>Her kod 4 kez tekrarlanır (<code>kRepeatTransmit = 4</code>)</td><td>ACK olmadığı için güvenilirlik tekrarla sağlanır; en az birinin sağlam gelmesi yeterlidir.</td></tr>
+<tr><td>Periyodik gönderim (2 sn) + 15 sn zaman aşımı</td><td>Alıcı, ardışık yaklaşık 7 paket kaçırılmadan düğümü çevrimdışı saymaz; tek tük kayıplar alarm üretmez.</td></tr>
+</table>
+<div class="warn"><b>Güvenlik sınırı:</b> Paketler şifresiz ve kimlik doğrulamasızdır; aynı formatta sahte paket üretmek ya da bandı karıştırmak (jamming) mümkündür. Bir öğrenci projesi için kabul edilebilir; gerçek bir üründe yuvarlanan kod (rolling code) veya şifreli bir radyo (ör. LoRa + AES) gerekir.</div>
+</section>
+
+<!-- ================= 7 ================= -->
+<section class="major" id="s7">
+<h2><span class="num">7</span>Oda düğümü (Arduino Nano)</h2>
+<p><code>firmware/room_node/room_node.ino</code> yaklaşık 70 satırlık, sınıfsız bir sketch'tir. Görevi: sensörleri okumak, yerel LED/buzzer'ı sürmek ve okumayı RF ile göndermek.</p>
+<table>
+<tr><th>Davranış</th><th>Ayrıntı (koddan)</th></tr>
+<tr><td>Gönderim tetikleyicisi</td><td>Son gönderimden 2 sn (<code>kSendIntervalMs</code>) geçtiyse <b>veya</b> PIR yeni HIGH olduysa (yükselen kenar, <code>motionStarted</code>).</td></tr>
+<tr><td>Gaz okuma</td><td>İlk 60 sn (<code>kGasWarmupMs</code>) 0 döner (MQ-2 ısıtıcısı ısınırken değer yüksek okunur). Sonra <code>analogRead(A0) &gt;&gt; 2</code>: 10 bitlik ADC (0..1023) 8 bite (0..255) indirilir.</td></tr>
+<tr><td>DHT11</td><td>Sıcaklık 0..127, nem 0..100 aralığına sıkıştırılır. Okuma başarısızsa (NaN) son geçerli değer korunur.</td></tr>
+<tr><td>Yerel buzzer</td><td>Gaz &gt;= 100 (<code>Gas::kLocalAlarmLevel</code>) iken D5 HIGH. Merkezden bağımsız yerel uyarı.</td></tr>
+<tr><td>LED'ler</td><td>Sarı: PIR anlık değeri (her döngüde). Kırmızı: gaz &gt;= 100. Mavi: sıcaklık &gt;= 30 °C (her gönderimde güncellenir).</td></tr>
+<tr><td>Gönderim</td><td>Dahili LED gönderim süresince yanar; <code>rf.send(RfPacket::encode(reading), 32)</code>, 4 tekrar.</td></tr>
+</table>
+<pre><span class="file">firmware/room_node/room_node.ino</span>const bool motion = digitalRead(Pin::kPir) == HIGH;
+const bool motionStarted = motion &amp;&amp; !lastMotion;
+...
+if (motionStarted || millis() - lastSend &gt;= Timing::kSendIntervalMs) { ... transmit(); }</pre>
+<div class="why"><b>Neden hareket başlangıcında hemen gönderim?</b> Periyodik 2 sn'lik gönderim tek başına kullanılsaydı, alarm tepkisi 2 sn'ye kadar gecikebilirdi. Yükselen kenarda anında gönderim, alarm gecikmesini radyo süresine indirir; periyodik gönderim de "hayatta" sinyali (heartbeat) işlevi görür.</div>
+<div class="why"><b>Neden düğüm "aptal", merkez "akıllı"?</b> Nano'nun belleği (2 KB RAM) ve iletişimi (tek yönlü) sınırlıdır. Karar mantığını merkezde tutmak, eşik ve kuralların tek yerde değiştirilmesini sağlar. Düğümde yalnızca yerel güvenlik için basit bir gaz buzzer'ı vardır.</div>
+<p class="small">Not: Düğümün yerel gaz buzzer'ında histerezis yoktur (tek eşik 100). <code>Timing::kLedBlinkMs</code> (30 ms) tanımlıdır ama kodda kullanılmamaktadır.</p>
+</section>
+
+<!-- ================= 8 ================= -->
+<section class="major" id="s8">
+<h2><span class="num">8</span>Yerel web paneli</h2>
+<p><code>WebPanel</code>, ESP32'nin <code>WebServer</code> kütüphanesiyle port 80'de çalışır. Arayüz (<code>web_page.h</code>) koyu temalı tek bir HTML sayfasıdır; JavaScript 1,5 sn'de bir <code>/api/status</code> çağırır ve düğmeler <code>POST /api/*</code> gönderir.</p>
+
+<h3><span class="num">8.1</span>Uç noktalar</h3>
+<table>
+<tr><th>Yöntem</th><th>Yol</th><th>İşlem</th><th>Yanıt</th></tr>
+<tr><td>GET</td><td><code>/</code></td><td>Panel sayfası (PROGMEM)</td><td>HTML</td></tr>
+<tr><td>GET</td><td><code>/api/status</code></td><td>İşlem yok</td><td>Durum JSON</td></tr>
+<tr><td>POST</td><td><code>/api/arm</code></td><td><code>alarm.arm("panel")</code></td><td>Durum JSON</td></tr>
+<tr><td>POST</td><td><code>/api/disarm</code></td><td><code>alarm.disarm("panel")</code></td><td>Durum JSON</td></tr>
+<tr><td>POST</td><td><code>/api/door</code></td><td><code>door.open()</code> + acil olay "Kapı panelden açıldı"</td><td>Durum JSON</td></tr>
+<tr><td>POST</td><td><code>/api/test</code></td><td><code>test.begin("panel")</code> (panel zaten kimlik doğruladığı için kart istenmez)</td><td>Durum JSON</td></tr>
+<tr><td>POST</td><td><code>/api/relay?on=1|0</code></td><td><code>relay.set(on)</code> + olay</td><td>Durum JSON</td></tr>
+</table>
+<pre><span class="file">firmware/security_hub/WebPanel.cpp</span>// Every route is authenticated; API routes answer with the fresh status after acting.
+void WebPanel::route(const char* path, HTTPMethod method, std::function&lt;void()&gt; action) {
+  const bool isPage = strcmp(path, "/") == 0;
+  server_.on(path, method, [this, action, isPage] {
+    if (!authorized()) { server_.requestAuthentication(); return; }
+    action();
+    if (!isPage) sendStatus();
+  });
+}</pre>
+<div class="why"><b>Neden her komut sonrası durum dönülüyor?</b> Arayüz, düğmeye basıldıktan sonra ayrıca bir GET yapmadan yeni durumu hemen çizebilir. Tek bir <code>route()</code> yardımcı fonksiyonu kimlik doğrulamayı unutmayı imkânsız kılar.</div>
+
+<h3><span class="num">8.2</span>Kimlik doğrulama: HTTP Basic Auth</h3>
+<p>Tarayıcı ilk istekte 401 + <code>WWW-Authenticate</code> alır ve kullanıcı adı/şifre sorar (<code>Secrets::kPanelUser</code>, <code>kPanelPassword</code>). Sonraki isteklerde <code>Authorization: Basic base64(kullanıcı:şifre)</code> başlığı gönderilir.</p>
+<div class="warn"><b>Sınır:</b> Bağlantı HTTP (TLS yok) olduğundan Basic Auth bilgisi yerel ağda düz metin sayılır (base64 şifreleme değildir). Panel yalnızca güvenilen yerel ağ için tasarlanmıştır; internete port yönlendirme yapılmamalıdır. Uzaktan erişim AWS üzerinden düşünülmüştür.</div>
+
+<h3><span class="num">8.3</span><code>/api/status</code> JSON alanları (<code>StatusReport.cpp</code>)</h3>
+<table>
+<tr><th>Alan</th><th>Tür</th><th>Anlamı</th></tr>
+<tr><td><code>state</code></td><td>string</td><td><code>disarmed</code> | <code>arming</code> | <code>armed</code> | <code>triggered</code></td></tr>
+<tr><td><code>gasAlarm</code></td><td>bool</td><td>Gaz alarmı etkin mi</td></tr>
+<tr><td><code>relay</code></td><td>bool</td><td>Röle (fan) açık mı</td></tr>
+<tr><td><code>door</code></td><td>bool</td><td>Kapı/vana açık mı (zamanlı açık veya <code>hold</code>)</td></tr>
+<tr><td><code>armLeft</code></td><td>sayı (sn)</td><td>Kurulmaya kalan süre, yukarı yuvarlanmış</td></tr>
+<tr><td><code>armDelay</code></td><td>sayı (sn)</td><td>10 (<code>kArmDelayMs / 1000</code>)</td></tr>
+<tr><td><code>gasLimit</code></td><td>sayı</td><td>100 (<code>kGasAlarmLevel</code>)</td></tr>
+<tr><td><code>tempHigh</code></td><td>sayı (°C)</td><td>30 (<code>kTempHighC</code>)</td></tr>
+<tr><td><code>uptime</code></td><td>sayı (sn)</td><td>Açılıştan beri geçen süre</td></tr>
+<tr><td><code>nodes[]</code></td><td>dizi</td><td>En az bir kez görülmüş düğümler: <code>id</code>, <code>online</code>, <code>temp</code>, <code>hum</code>, <code>gas</code>, <code>motion</code>, <code>age</code> (son paketten beri sn)</td></tr>
+<tr><td><code>log[]</code></td><td>dizi</td><td>En yeni önce, en fazla 20 olay: <code>t</code> (saat), <code>m</code> (mesaj), <code>u</code> (acil mi)</td></tr>
+</table>
+<pre>{"state":"armed","gasAlarm":false,"relay":false,"door":false,"armLeft":0,"armDelay":10,
+ "gasLimit":100,"tempHigh":30,"uptime":742,
+ "nodes":[{"id":0,"online":true,"temp":24,"hum":50,"gas":45,"motion":false,"age":1}],
+ "log":[{"t":"14:02:11","m":"Sistem kuruldu (tuş takımı)","u":true}]}</pre>
+<p class="small">Örnek değerler açıklama amaçlıdır; alan adları ve türler koddan alınmıştır.</p>
+
+<h3><span class="num">8.4</span>mDNS: <code>guvenlik.local</code></h3>
+<p><code>MDNS.begin("guvenlik")</code> ve <code>MDNS.addService("http", "tcp", 80)</code> ile cihaz yerel ağda <code>guvenlik.local</code> adıyla duyurulur. Kullanıcının IP adresini bilmesi gerekmez. mDNS bazı ağlarda veya eski Android sürümlerinde çalışmayabilir; bu yüzden IP adresi açılışta LCD'de gösterilir (README: açılmazsa <code>http://&lt;IP&gt;</code>).</p>
+<div class="why"><b>Neden XSS koruması?</b> Sayfa olay mesajlarını <code>esc()</code> fonksiyonuyla HTML'den kaçırarak ekler. Tanımsız kart UID'si gibi dışarıdan gelen veriler olay kaydına girdiği için bu önemli bir alışkanlıktır.</div>
+</section>
+
+<!-- ================= 9 ================= -->
+<section class="major" id="s9">
+<h2><span class="num">9</span>PC kontrol merkezi</h2>
+<h3><span class="num">9.1</span>Merkez tarafı: <code>TelemetryClient</code></h3>
+<pre><span class="file">firmware/security_hub/TelemetryClient.cpp</span>void TelemetryClient::update() {
+  using namespace Config::Telemetry;
+  const uint32_t now = millis();
+  if (!kEnabled || WiFi.status() != WL_CONNECTED || static_cast&lt;int32_t&gt;(now - nextAttempt_) &lt; 0) return;
+  const bool ok = post(status_.toJson());
+  nextAttempt_ = now + (ok ? kIntervalMs : kRetryMs);   // 5000 ms / 30000 ms
+}</pre>
+<table>
+<tr><th>Ayar (<code>Config::Telemetry</code>)</th><th>Değer</th><th>Neden</th></tr>
+<tr><td><code>kServerUrl</code></td><td><code>http://192.168.1.91:8080/api/telemetry</code></td><td>PC'nin yerel IP'si; ağ değişirse güncellenmeli.</td></tr>
+<tr><td><code>kIntervalMs</code></td><td>5000</td><td>Grafik için yeterli çözünürlük, ağ/CPU yükü düşük.</td></tr>
+<tr><td><code>kRetryMs</code></td><td>30000</td><td><b>Geri çekilme:</b> PC kapalıyken her 5 sn'de bir 800 ms bloklamamak için.</td></tr>
+<tr><td><code>kTimeoutMs</code></td><td>800</td><td>HTTP istemcisi bloklayıcıdır; kısa zaman aşımı ana döngüyü (kart, RF, siren) canlı tutar.</td></tr>
+<tr><td>Başlık</td><td><code>X-Api-Key: Secrets::kTelemetryKey</code></td><td>Yerel ağdaki başka bir cihazın sahte veri yazmasını engelleyen paylaşılan anahtar.</td></tr>
+</table>
+
+<h3><span class="num">9.2</span>PC tarafı: <code>pc-dashboard/server.py</code></h3>
+<p>Yalnızca Python standart kütüphanesi: <code>http.server.ThreadingHTTPServer</code>, <code>sqlite3</code>, <code>json</code>, <code>threading</code>. Ayarlar <code>config.json</code>'dan okunur (şablon <code>config.example.json</code>: host <code>0.0.0.0</code>, port <code>8080</code>, veritabanı <code>telemetry.db</code>, <code>device_timeout_s</code> 20, <code>history_minutes</code> 60, <code>events_limit</code> 100).</p>
+<table>
+<tr><th>Yöntem</th><th>Yol</th><th>Açıklama</th></tr>
+<tr><td>POST</td><td><code>/api/telemetry</code></td><td>Anahtar yanlışsa 401; gövde 0 veya &gt; 64 KB ise 400; geçersiz JSON 400; başarıda veriyi saklar, <b>204 No Content</b>.</td></tr>
+<tr><td>GET</td><td><code>/</code></td><td><code>index.html</code> paneli.</td></tr>
+<tr><td>GET</td><td><code>/api/latest</code></td><td>Bellekteki son anlık görüntü, yaşı ve <code>online</code> (yaş &lt; 20 sn).</td></tr>
+<tr><td>GET</td><td><code>/api/history?minutes=N</code></td><td>Son N dakikanın örnekleri (en fazla 24 saat).</td></tr>
+<tr><td>GET</td><td><code>/api/events</code></td><td>Son 100 olay, en yeni önce.</td></tr>
+</table>
+<p>Panel sayfası <code>/api/latest</code>'i 2 sn, <code>/api/events</code>'i 5 sn, <code>/api/history?minutes=60</code>'ı 15 sn'de bir sorar.</p>
+
+<h4>SQLite şeması</h4>
+<pre><span class="file">pc-dashboard/server.py</span>CREATE TABLE IF NOT EXISTS samples (
+    ts REAL NOT NULL, node INTEGER NOT NULL, temp INTEGER, hum INTEGER,
+    gas INTEGER, motion INTEGER, state TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_samples_ts ON samples (ts);
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, day TEXT NOT NULL,
+    device_time TEXT NOT NULL, message TEXT NOT NULL, urgent INTEGER NOT NULL,
+    UNIQUE (day, device_time, message)
+);</pre>
+<div class="why"><b>Neden UNIQUE ile olay ayıklama?</b> Merkez her POST'ta son 20 olayın tamamını yeniden gönderir (hangisinin daha önce iletildiğini takip etmez; bu merkezi basit ve durumsuz tutar). Sunucu <code>INSERT OR IGNORE</code> kullanır; <code>(day, device_time, message)</code> üçlüsü aynı olan kayıt ikinci kez eklenmez. <code>day</code>, PC'nin tarihidir; çünkü cihaz yalnızca saat (<code>SS:DD:ss</code>) gönderir ve ertesi gün aynı saatte aynı mesaj tekrar yazılabilmelidir.</div>
+<div class="why"><b>Neden <code>samples</code> üzerinde <code>ts</code> indeksi?</b> Geçmiş sorgusu <code>WHERE ts &gt;= ?</code> ile zaman aralığı ister; 5 sn'de bir satır eklendiğinde günde yaklaşık 17 bin satır olur, indeks sorguyu hızlı tutar.</div>
+<div class="why"><b>Neden <code>_db_lock</code>?</b> <code>ThreadingHTTPServer</code> her isteği ayrı iş parçacığında işler; yazma işlemleri kilitle sıraya sokularak SQLite'ın "database is locked" hatası önlenir.</div>
+<div class="note"><b>Sınır:</b> Cihaz saati NTP almadıysa zaman damgası <code>+123s</code> biçimindedir; yeniden başlatmadan sonra aynı damga ve mesaj tekrar gelirse o olay yanlışlıkla "kopya" sayılıp atlanabilir. Aynı saniyede iki kez aynı mesaj da tek kayda düşer.</div>
+</section>
+
+<!-- ================= 10 ================= -->
+<section class="major" id="s10">
+<h2><span class="num">10</span>AWS IoT Core bulut katmanı</h2>
+<p>Bulut kısmı kuruludur ve tamamen kodla tanımlanmıştır: <code>cloud/template.yaml</code> (CloudFormation), <code>cloud/lambda/decide.py</code> (karar fonksiyonu), <code>cloud/deploy.ps1</code> / <code>destroy.ps1</code> (betikler) ve <code>cloud/config.json</code> (parametreler).</p>
+<table>
+<tr><th><code>cloud/config.json</code></th><th>Değer</th></tr>
+<tr><td><code>region</code></td><td><code>eu-central-1</code> (Frankfurt)</td></tr>
+<tr><td><code>stack_name</code></td><td><code>iot-guvenlik</code></td></tr>
+<tr><td><code>thing_name</code></td><td><code>hub01</code></td></tr>
+<tr><td><code>topic_prefix</code></td><td><code>factory</code></td></tr>
+<tr><td><code>thresholds</code></td><td><code>temp_on</code> 35, <code>temp_off</code> 32, <code>gas_on</code> 100, <code>gas_off</code> 80</td></tr>
+<tr><td><code>retention_days</code></td><td>7</td></tr>
+</table>
+
+<h3 id="s10-1"><span class="num">10.1</span>Kimlik ve bağlantı: Thing, X.509, MQTT/TLS</h3>
+<ul>
+<li><b>Thing</b> <code>hub01</code>: AWS IoT'de cihazın kaydı. Device Shadow bu ada bağlıdır.</li>
+<li><b>X.509 cihaz sertifikası</b> ve özel anahtar: <code>deploy.ps1</code> <code>create-keys-and-certificate --set-as-active</code> ile üretir, Thing'e ve IoT politikasına bağlar. Cihaz bunlarla <b>karşılıklı TLS</b> (mTLS) yapar: sunucu cihazı sertifikasından tanır, şifre gerekmez.</li>
+<li><b>Amazon Root CA 1</b>: cihaz, bağlandığı sunucunun gerçekten AWS olduğunu bu kök sertifikayla doğrular (<code>net_.setCACert</code>).</li>
+<li><b>Port 8883</b> (<code>Config::Cloud::kPort</code>): MQTT over TLS standart portu. Uç nokta <code>iot:Data-ATS</code> tipindedir.</li>
+<li><b>İstemci kimliği</b> = thing adı (<code>mqtt_.connect(AwsSecrets::kThingName)</code>); politika başka bir kimliğe izin vermez.</li>
+<li><b>Saat şartı:</b> TLS sertifika geçerlilik tarihlerini kontrol eder; bu yüzden <code>time(nullptr) &lt; kMinValidEpoch</code> (1700000000, Kasım 2023) iken bağlanma denenmez, NTP beklenir.</li>
+<li>Bağlantı kopukken 30 sn'de bir yeniden denenir (<code>kRetryMs</code>), keep-alive 60 sn, MQTT tampon 4096 bayt (olay kayıtlı durum JSON'u tek pakete sığsın diye).</li>
+</ul>
+<pre><span class="file">firmware/security_hub/CloudLink.cpp</span>net_.setCACert(AwsSecrets::kRootCa);
+net_.setCertificate(AwsSecrets::kDeviceCert);
+net_.setPrivateKey(AwsSecrets::kPrivateKey);
+mqtt_.setServer(AwsSecrets::kEndpoint, Config::Cloud::kPort);   // 8883</pre>
+<div class="why"><b>Neden sertifika, neden şifre değil?</b> Özel anahtar cihazdan hiç çıkmaz; sunucuya yalnızca imzayla sahip olduğu kanıtlanır. Sertifika tek tek iptal edilebilir (<code>update-certificate --new-status INACTIVE</code>), bir cihaz çalınsa diğerleri etkilenmez. AWS IoT Core cihaz kimliği için bu yöntemi esas alır.</div>
+
+<h3 id="s10-2"><span class="num">10.2</span>Konu (topic) yapısı</h3>
+<table>
+<tr><th>Konu</th><th>Yön</th><th>İçerik</th><th>Sıklık</th></tr>
+<tr><td><code>factory/hub01/telemetry</code></td><td>Cihaz → bulut</td><td><code>StatusReport::toJson()</code> (yerel panelle aynı JSON)</td><td>5 sn</td></tr>
+<tr><td><code>factory/hub01/events</code></td><td>Cihaz → bulut</td><td>Her olay ayrı mesaj: <code>{"t","m","u"}</code>, eskiden yeniye</td><td>Olay oluştukça</td></tr>
+<tr><td><code>$aws/things/hub01/shadow/update</code></td><td>Cihaz → bulut</td><td><code>{"state":{"reported":{"fan":"on|off","valve":"open|closed"}}}</code></td><td>Bağlanınca ve her delta sonrası</td></tr>
+<tr><td><code>$aws/things/hub01/shadow/update/delta</code></td><td>Bulut → cihaz</td><td><code>{"state":{"fan":"on","valve":"open"},...}</code> (desired ≠ reported farkı)</td><td>Karar değişince</td></tr>
+</table>
+<div class="why"><b>Neden <code>önek/thing/tür</code> hiyerarşisi?</b> IoT Rules <code>factory/+/telemetry</code> joker karakteriyle tüm cihazları tek kuralla dinler ve <code>topic(2)</code> ile cihaz adını konudan çıkarır. Politika da <code>factory/${thing}/*</code> ile her cihazı kendi alt ağacına hapseder. Yeni cihaz eklemek kural değiştirmeyi gerektirmez.</div>
+<p class="small">PubSubClient yalnızca QoS 0 ile yayın yapar; delta aboneliği QoS 1 ile istenir (<code>mqtt_.subscribe(shadow, 1)</code>).</p>
+
+<h3 id="s10-3"><span class="num">10.3</span>IoT politikası: en az yetki</h3>
+<pre><span class="file">cloud/template.yaml (DevicePolicy, kısaltılmış)</span>iot:Connect   → client/${iot:Connection.Thing.ThingName}
+iot:Publish   → topic/${TopicPrefix}/${iot:Connection.Thing.ThingName}/*
+                topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update
+iot:Subscribe → topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/delta
+iot:Receive   → topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/delta</pre>
+<div class="why"><b>Neden politika değişkenleri?</b> <code>${iot:Connection.Thing.ThingName}</code>, bağlanan sertifikaya iliştirilmiş Thing'in adıyla çalışma anında değiştirilir. Böylece tek bir politika tüm cihazlara takılabilir ama her cihaz yalnızca kendi istemci kimliğini, konularını ve Shadow'unu kullanabilir. Ele geçirilmiş bir cihaz diğerlerinin konularına yazamaz veya başka bir cihazın Shadow komutlarını okuyamaz. Cihaz <code>shadow/get</code> veya başka bir konuya abone olamaz; yalnızca ihtiyaç duyduğu dört işlem izinlidir.</div>
+
+<h3 id="s10-4"><span class="num">10.4</span>IoT Rules ve DynamoDB</h3>
+<pre><span class="file">cloud/template.yaml (TelemetryRule)</span>SELECT topic(2) AS device, timestamp() AS ts,
+floor(timestamp() / 1000) + ${RetentionDays} * 86400 AS expires,
+state, gasAlarm, relay, door, uptime, nodes
+FROM '${TopicPrefix}/+/telemetry'
+→ DynamoDBv2 PutItem (TelemetryTable)  +  Lambda (DecisionFunction)</pre>
+<pre><span class="file">cloud/template.yaml (EventsRule)</span>SELECT topic(2) AS device, timestamp() AS ts,
+floor(timestamp() / 1000) + ${RetentionDays} * 86400 AS expires,
+t AS deviceTime, m AS message, u AS urgent
+FROM '${TopicPrefix}/+/events'
+→ DynamoDBv2 PutItem (EventsTable)</pre>
+<table>
+<tr><th>Tablo</th><th>Anahtar</th><th>Faturalama</th><th>TTL</th></tr>
+<tr><td><code>TelemetryTable</code></td><td><code>device</code> (S, bölüm anahtarı) + <code>ts</code> (N, sıralama anahtarı, ms)</td><td><code>PAY_PER_REQUEST</code></td><td><code>expires</code> özniteliği (epoch sn)</td></tr>
+<tr><td><code>EventsTable</code></td><td>aynı</td><td><code>PAY_PER_REQUEST</code></td><td><code>expires</code></td></tr>
+</table>
+<p class="small">Tablo adları şablonda verilmediği için CloudFormation tarafından otomatik üretilir (yığın çıktıları <code>TelemetryTableName</code>, <code>EventsTableName</code>).</p>
+<div class="why"><b>Neden kural motoru?</b> Cihaz yalnızca MQTT'ye yayın yapar; verinin nereye yazılacağını bilmez. Saklama ve işleme sunucu tarafında SQL benzeri bir kuralla, sunucu kodu yazmadan tanımlanır. <code>DynamoDBv2</code> eylemi seçilen her alanı ayrı öznitelik olarak yazar (iç içe <code>nodes</code> dizisi liste olarak saklanır). Kuralın DynamoDB'ye yazabilmesi için yalnızca <code>dynamodb:PutItem</code> izni olan ayrı bir IAM rolü (<code>RuleRole</code>) vardır.</div>
+<div class="why"><b>Neden <code>device + ts</code> anahtarı ve TTL?</b> "Bir cihazın belirli zaman aralığındaki verileri" sorgusu tek bölümde sıralı okuma olur. <code>expires</code> = şimdi + 7 gün; DynamoDB süresi dolan kayıtları ücretsiz olarak kendiliğinden siler, tablo sınırsız büyümez.</div>
+
+<h3 id="s10-5"><span class="num">10.5</span>Lambda kararı ve histerezis</h3>
+<p><code>decide.py</code> (Python 3.12, zaman aşımı 10 sn) her telemetri mesajında TelemetryRule tarafından çağrılır. Eşikler ortam değişkenleri olarak (<code>TEMP_ON</code>, <code>TEMP_OFF</code>, <code>GAS_ON</code>, <code>GAS_OFF</code>) <code>config.json</code>'dan gelir.</p>
+<pre><span class="file">cloud/lambda/decide.py</span>def hazard(temp, gas, active):
+    if active:
+        return temp &gt; TEMP_OFF or gas &gt; GAS_OFF      # 32 °C / 80
+    return temp &gt;= TEMP_ON or gas &gt;= GAS_ON          # 35 °C / 100
+
+def handler(event, context):
+    thing = event["device"]
+    nodes = [n for n in event.get("nodes", []) if n.get("online")]
+    if not nodes: return {"skipped": "no online nodes"}
+    temp = max(n["temp"] for n in nodes); gas = max(n["gas"] for n in nodes)
+    desired = desired_state(thing)               # GetThingShadow
+    active = desired.get("fan") == "on"
+    danger = hazard(temp, gas, active)
+    if danger == active and "fan" in desired:    # değişiklik yok: Shadow'a yazma
+        return {"changed": False, ...}
+    state = {"fan": "on" if danger else "off", "valve": "open" if danger else "closed"}
+    iot.update_thing_shadow(thingName=thing, payload=json.dumps({"state": {"desired": state}}))
+    print(json.dumps(decision))                  # CloudWatch Logs</pre>
+<table>
+<tr><th>Mevcut durum</th><th>Fanı açma koşulu</th><th>Fanı kapatma koşulu</th></tr>
+<tr><td>Fan kapalı</td><td>en yüksek sıcaklık &gt;= 35 °C <b>veya</b> en yüksek gaz &gt;= 100</td><td>-</td></tr>
+<tr><td>Fan açık</td><td>-</td><td>sıcaklık &lt;= 32 °C <b>ve</b> gaz &lt;= 80</td></tr>
+</table>
+<div class="why"><b>Neden durum Shadow'dan okunuyor?</b> Lambda durumsuzdur; her çağrı bağımsız bir konteynerde çalışabilir. "Fan şu an açık mı?" bilgisi (histerezis için gerekli) kalıcı bir yerde tutulmalıdır; Shadow'un <code>desired</code> bölümü bu hafızadır. Yalnızca karar değiştiğinde yazılması gereksiz Shadow güncellemelerini ve cihaz mesajlarını önler.</div>
+<p>Lambda'nın yetkisi <code>DecisionRole</code> ile yalnızca bu Thing üzerinde <code>iot:GetThingShadow</code> ve <code>iot:UpdateThingShadow</code> ile sınırlıdır; loglar için <code>AWSLambdaBasicExecutionRole</code> eklenmiştir. IoT'nin fonksiyonu çağırabilmesi <code>DecisionInvokePermission</code> ile yalnızca bu kurala (<code>SourceArn</code>) ve bu hesaba verilmiştir.</p>
+
+<h3 id="s10-6"><span class="num">10.6</span>Device Shadow ile komut akışı</h3>
+<p>Shadow, AWS'de saklanan JSON bir "dijital ikiz"dir: <code>desired</code> (olması istenen), <code>reported</code> (cihazın bildirdiği gerçek) ve ikisi farklıysa AWS'nin hesapladığı <code>delta</code>. Cihaz çevrimdışıyken verilen komut kaybolmaz; cihaz bağlanınca durumunu bildirir ve fark varsa delta alır.</p>
+<figure>
+<svg viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Shadow komut akışı sıralama diyagramı">
+<defs><marker id="sq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1d2433"/></marker></defs>
+<g font-size="12" font-weight="700" text-anchor="middle">
+<rect x="20" y="10" width="110" height="40" rx="5" fill="#e8eef7" stroke="#1f3a5f"/><text x="75" y="28">ESP32 hub01</text><text x="75" y="43" font-size="10" font-weight="400">CloudLink</text>
+<rect x="150" y="10" width="110" height="40" rx="5" fill="#fdf3e3" stroke="#9a4d06"/><text x="205" y="28">IoT Core</text><text x="205" y="43" font-size="10" font-weight="400">MQTT aracısı</text>
+<rect x="280" y="10" width="110" height="40" rx="5" fill="#fdf3e3" stroke="#9a4d06"/><text x="335" y="35">TelemetryRule</text>
+<rect x="410" y="10" width="110" height="40" rx="5" fill="#fdf3e3" stroke="#9a4d06"/><text x="465" y="35">DynamoDB</text>
+<rect x="540" y="10" width="110" height="40" rx="5" fill="#fdf3e3" stroke="#9a4d06"/><text x="595" y="28">Lambda</text><text x="595" y="43" font-size="10" font-weight="400">decide.py</text>
+<rect x="670" y="10" width="110" height="40" rx="5" fill="#fdf3e3" stroke="#9a4d06"/><text x="725" y="35">Device Shadow</text>
+</g>
+<g stroke="#c3cad6" stroke-dasharray="4 4"><line x1="75" y1="50" x2="75" y2="545"/><line x1="205" y1="50" x2="205" y2="545"/><line x1="335" y1="50" x2="335" y2="545"/><line x1="465" y1="50" x2="465" y2="545"/><line x1="595" y1="50" x2="595" y2="545"/><line x1="725" y1="50" x2="725" y2="545"/></g>
+<g stroke="#1d2433" stroke-width="1.4" marker-end="url(#sq)" fill="none">
+<line x1="75" y1="85" x2="203" y2="85"/>
+<line x1="205" y1="125" x2="333" y2="125"/>
+<line x1="335" y1="165" x2="463" y2="165"/>
+<line x1="335" y1="205" x2="593" y2="205"/>
+<line x1="595" y1="250" x2="723" y2="250"/>
+<line x1="723" y1="275" x2="597" y2="275"/>
+<line x1="595" y1="315" x2="723" y2="315"/>
+<line x1="725" y1="360" x2="77" y2="360"/>
+<line x1="75" y1="450" x2="723" y2="450"/>
+</g>
+<g font-size="11">
+<text x="80" y="78">1. publish factory/hub01/telemetry (5 sn)</text>
+<text x="210" y="118">2. SQL eşleşir: factory/+/telemetry</text>
+<text x="340" y="158">3. PutItem (expires = +7 gün)</text>
+<text x="340" y="198">4. invoke(event: device, nodes, ...)</text>
+<text x="600" y="243">5. GetThingShadow</text>
+<text x="600" y="290" fill="#5b6475">desired (fan açık mı?)</text>
+<text x="600" y="308">6. hazard() değiştiyse:</text>
+<text x="600" y="333">UpdateThingShadow desired</text>
+<text x="600" y="347" font-family="Consolas, monospace" font-size="10">{fan:on, valve:open}</text>
+<text x="230" y="353">7. desired ≠ reported → $aws/things/hub01/shadow/update/delta</text>
+</g>
+<rect x="20" y="375" width="200" height="56" rx="5" fill="#eaf5ea" stroke="#2f7d32"/>
+<text x="30" y="393" font-size="11" font-weight="700">8. onMessage(): uygula</text>
+<text x="30" y="408" font-size="10.5" font-family="Consolas, monospace">relay.set(fan=="on")</text>
+<text x="30" y="423" font-size="10.5" font-family="Consolas, monospace">door.hold(valve=="open")</text>
+<text x="230" y="443" font-size="11">9. publish shadow/update {"state":{"reported":{fan, valve}}} → delta kapanır</text>
+<rect x="540" y="470" width="240" height="40" rx="5" fill="#f5f7fa" stroke="#5b6475"/>
+<text x="660" y="487" text-anchor="middle" font-size="11">print(decision) → CloudWatch Logs</text>
+<text x="660" y="502" text-anchor="middle" font-size="10" fill="#5b6475">/aws/lambda/iot-guvenlik-decide (14 gün)</text>
+<line x1="595" y1="360" x2="595" y2="468" stroke="#5b6475" stroke-width="1" stroke-dasharray="2 3"/>
+<text x="20" y="535" font-size="10.5" fill="#5b6475">Olaylar (factory/hub01/events) aynı biçimde EventsRule ile EventsTable'a yazılır; Lambda'yı tetiklemez.</text>
+</svg>
+<figcaption>Şekil 5. Telemetriden aktüatöre bulut karar döngüsü (sıralama diyagramı).</figcaption>
+</figure>
+<pre><span class="file">firmware/security_hub/CloudLink.cpp</span>// Shadow delta: {"state":{"fan":"on","valve":"open"},...}
+void CloudLink::onMessage(char*, uint8_t* payload, unsigned int length) {
+  JsonDocument doc;
+  if (deserializeJson(doc, payload, length)) return;
+  JsonObject state = doc["state"];
+  if (state["fan"].is&lt;const char*&gt;())   actuators_.setFan(strcmp(state["fan"], "on") == 0);
+  if (state["valve"].is&lt;const char*&gt;()) actuators_.setValve(strcmp(state["valve"], "open") == 0);
+  reportState();
+}</pre>
+<div class="why"><b>Neden doğrudan MQTT komutu değil de Shadow?</b> Doğrudan bir "fanı aç" mesajı cihaz o an çevrimdışıysa kaybolur. Shadow istenen durumu saklar; cihaz yeniden bağlandığında <code>connect()</code> içinde önce <code>reportState()</code> çağırır, fark varsa AWS delta gönderir. Ayrıca bulut tarafı cihazın gerçek durumunu (<code>reported</code>) her an okuyabilir. Komut "olay" değil "istenen durum" olarak modellenir; bu idempotenttir (aynı komutun iki kez gelmesi zarar vermez).</div>
+<p><b>Yeniden bağlanmada olaylar:</b> <code>connect()</code>, <code>publishedEvents_</code> sayacını tamponda hâlâ duran olayların başına çeker; böylece bağlantı kesikken oluşan (en fazla 20) olay bağlanınca eskiden yeniye gönderilir. Yayın başarısız olursa kalanlar sonraki turda denenir.</p>
+
+<h3 id="s10-7"><span class="num">10.7</span>Dağıtım ve kaldırma betikleri</h3>
+<div class="two">
+<div>
+<h4><code>deploy.ps1</code> (tekrar çalıştırılabilir)</h4>
+<ol>
+<li><code>aws cloudformation deploy</code>: <code>template.yaml</code>, eşik ve isim parametreleri <code>config.json</code>'dan, <code>CAPABILITY_IAM</code>.</li>
+<li>Lambda kodu: <code>decide.py</code> zip'lenip <code>update-function-code</code> ile yüklenir (şablondaki kod yer tutucudur; tek doğruluk kaynağı <code>decide.py</code>).</li>
+<li>Thing yoksa <code>create-thing</code>.</li>
+<li>Sertifika yoksa <code>create-keys-and-certificate --set-as-active</code>; dosyalar <code>cloud/.certs/</code>'e; politika ve Thing'e bağlama.</li>
+<li><code>AmazonRootCA1.pem</code> indirilir (yoksa).</li>
+<li><code>describe-endpoint --endpoint-type iot:Data-ATS</code>; uç nokta, thing adı, önek ve üç PEM <code>firmware/security_hub/aws_secrets.h</code> dosyasına yazılır ("do not commit").</li>
+</ol>
+</div>
+<div>
+<h4><code>destroy.ps1</code></h4>
+<ol>
+<li>Sertifikayı Thing'den ve politikadan ayırır.</li>
+<li>Sertifikayı <code>INACTIVE</code> yapar ve siler.</li>
+<li>Thing Shadow'unu siler.</li>
+<li>Thing'i siler.</li>
+<li>CloudFormation yığınını siler ve tamamlanmasını bekler (tablolar, Lambda, roller, kurallar, politika, log grubu).</li>
+<li>Yerel <code>cloud/.certs/</code> ve <code>aws_secrets.h</code> dosyalarını siler.</li>
+</ol>
+</div>
+</div>
+<div class="why"><b>Neden altyapı kod olarak (IaC)?</b> Konsolda elle tıklayarak kurulan bir sistem tekrarlanamaz ve unutulur. Şablon, tüm kaynakları ve izinleri gözden geçirilebilir tek bir dosyada toplar; <code>destroy.ps1</code> ile her şey tek komutla kaldırılır, unutulan kaynak maliyet üretmez. Sertifika ve Thing CloudFormation dışında, betikle yönetilir; çünkü özel anahtarın yerel dosyaya yazılması gerekir.</div>
+
+<h3 id="s10-8"><span class="num">10.8</span>Yerel güvenlik yedeği ve maliyet kontrolü</h3>
+<p><b>İnternet yokken ne olur?</b> <code>CloudLink::update()</code> Wi-Fi yoksa veya bağlantı kurulamazsa hemen döner ve 30 sn'de bir dener; TLS el sıkışması ana döngüyü ancak deneme anında kısa süre tutar. Kapı erişimi, hırsız alarmı, gaz alarmı, siren, LED'ler, LCD ve yerel web paneli tamamen ESP32 üzerinde çalıştığı için etkilenmez. Wi-Fi hiç yoksa bile (<code>kWifiFailed</code>) yerel işlevler devam eder; düğümün kendi gaz buzzer'ı da merkezden bağımsızdır.</p>
+<div class="warn"><b>Önemli ayrım:</b> Fan (röle) ve vana (servo) <b>otomatik</b> kontrolü yalnızca bulut Lambda'sındadır. İnternet kesikken yüksek gaz sireni çalar, ancak fan kendiliğinden açılmaz (panelden elle açılabilir). Merkezde gaz alarmında röleyi yerel olarak süren bir kod yoktur.</div>
+<table>
+<tr><th>Maliyet önlemi</th><th>Nerede</th></tr>
+<tr><td>DynamoDB <code>PAY_PER_REQUEST</code> (boşta ücret yok)</td><td><code>template.yaml</code></td></tr>
+<tr><td>TTL ile 7 gün sonra otomatik silme (<code>retention_days</code>)</td><td><code>template.yaml</code>, <code>config.json</code></td></tr>
+<tr><td>Lambda log grubu 14 gün saklama</td><td><code>DecisionLogs</code></td></tr>
+<tr><td>Lambda yalnızca karar değişince Shadow'a yazar</td><td><code>decide.py</code></td></tr>
+<tr><td>Telemetri 5 sn (dakikada 12 mesaj); olaylar yalnızca oluştukça</td><td><code>config.h</code></td></tr>
+<tr><td>Tek komutla tüm kaynakların kaldırılması</td><td><code>destroy.ps1</code></td></tr>
+<tr><td>Bütçe alarmı (AWS Budgets)</td><td><b>Depoda tanımlı değil.</b> Konsolda elle kurulduysa koddan doğrulanamaz.</td></tr>
+</table>
+</section>
+
+<!-- ================= 11 ================= -->
+<section class="major" id="s11">
+<h2><span class="num">11</span>Teknoloji seçimleri tablosu</h2>
+<table>
+<tr><th style="width:15%">Teknoloji</th><th style="width:17%">Nerede</th><th>Neden seçildi</th><th style="width:25%">Alternatif ve karşılaştırma</th></tr>
+<tr><td>ESP32-S3</td><td>Merkez</td><td>Dahili Wi-Fi, TLS için yeterli RAM ve hız, çok GPIO, Arduino desteği.</td><td>Raspberry Pi: Linux, daha güçlü ama açılışı yavaş, gerçek zamanlı değil, pahalı.</td></tr>
+<tr><td>Arduino Nano</td><td>Düğüm</td><td>Ucuz, 5 V lojik (sensörlerle doğrudan uyumlu), basit.</td><td>İkinci bir ESP32 (ESP-NOW ile): daha yetenekli ama daha fazla güç ve maliyet.</td></tr>
+<tr><td>rc-switch</td><td>RF</td><td>İki platformda da çalışır, 32 bitlik tek kod gönderimi basit.</td><td>RadioHead RH_ASK: paket, uzunluk, CRC sunar; daha ağır, zamanlayıcı çakışma riski.</td></tr>
+<tr><td>HTTP POST</td><td>Merkez → PC</td><td>PC tarafında aracı (broker) kurmadan, stdlib ile alınabilir; hata ayıklaması kolay (curl, tarayıcı).</td><td>MQTT: yerelde Mosquitto aracısı gerekir; çift yönlü ve hafif ama ek kurulum.</td></tr>
+<tr><td>MQTT (PubSubClient)</td><td>Merkez ↔ AWS</td><td>AWS IoT Core'un yerel protokolü; kalıcı bağlantı üzerinden çift yönlü (Shadow delta için şart), küçük başlık. PubSubClient küçük, Arduino'da yaygın, <code>WiFiClientSecure</code> ile TLS.</td><td>HTTPS ile AWS IoT'ye yalnızca yayın yapılabilir, komut almak için yoklama gerekir. Alternatif kütüphane: AWS IoT Device SDK, arduino-mqtt.</td></tr>
+<tr><td>ArduinoJson</td><td>StatusReport, CloudLink</td><td>Belleği verimli, hem üretme hem ayrıştırma; elle dize birleştirmede kaçış hataları olmaz.</td><td>Elle <code>String</code> birleştirme: hataya açık. cJSON: C API, daha zahmetli.</td></tr>
+<tr><td>Python stdlib (<code>http.server</code>)</td><td>PC sunucusu</td><td>Kurulum gerektirmez (<code>pip install</code> yok), tek dosya, öğretici.</td><td>FastAPI: otomatik doğrulama, OpenAPI dokümanı, async; ama bağımlılık kurulumu gerekir. Bu boyutta gereksiz.</td></tr>
+<tr><td>SQLite</td><td>PC</td><td>Sunucusuz, tek dosya, SQL; yerel geçmiş için ideal.</td><td>DynamoDB: bulutta, ölçeklenir, yönetilen; ama internet ve hesap gerekir. Burada ikisi de var: yerel ve bulut kopya.</td></tr>
+<tr><td>DynamoDB</td><td>AWS</td><td>Sunucusuz, isteğe göre ücret, TTL, IoT Rules ile doğrudan entegrasyon.</td><td>Timestream (zaman serisi, daha pahalı), RDS (sürekli çalışan sunucu), S3 + Athena (toplu analiz).</td></tr>
+<tr><td>Lambda</td><td>AWS karar</td><td>Olay başına çalışır, sunucu yönetimi yok, IoT kuralı doğrudan tetikler.</td><td>Sürekli çalışan EC2: boşta da ücret. IoT Events: durum makinesi servisi, daha karmaşık.</td></tr>
+<tr><td>Device Shadow</td><td>AWS komut</td><td>Çevrimdışı cihaza komut saklama, istenen/gerçek durum ayrımı.</td><td>Doğrudan komut konusu: basit ama kayıp riski. IoT Jobs: uzun süreli işler için.</td></tr>
+<tr><td>CloudFormation</td><td>AWS kurulum</td><td>Tekrarlanabilir, gözden geçirilebilir, tek komutla silinebilir; ek araç gerektirmez (AWS CLI yeterli).</td><td>Elle konsol kurulumu: hızlı başlar ama belgesiz ve tekrarlanamaz. Terraform/CDK: güçlü ama ek araç.</td></tr>
+<tr><td>mDNS</td><td>Yerel ağ</td><td>IP bilmeden <code>guvenlik.local</code>.</td><td>Yönlendiricide statik IP / DHCP rezervasyonu.</td></tr>
+<tr><td>HTTP Basic Auth</td><td>Yerel panel</td><td>WebServer'da hazır, tarayıcı yerel destekler, oturum yönetimi gerekmez.</td><td>Oturum çerezi + giriş formu, ya da HTTPS + token: daha güvenli, ESP32'de daha zahmetli.</td></tr>
+</table>
+</section>
+
+<!-- ================= 12 ================= -->
+<section class="major" id="s12">
+<h2><span class="num">12</span>Donanım sorunları ve öğrenilen dersler</h2>
+<p>Aşağıdaki maddeler README "Güç" bölümü, breadboard rehberi notları ve kod yorumlarından derlenmiştir.</p>
+<table>
+<tr><th style="width:30%">Belirti</th><th>Neden</th><th style="width:30%">Çözüm</th></tr>
+<tr><td>LCD bozuk karakter yazıyor, RF alıcı ve servo çalışmıyor</td><td>Güç modülünün "5V OFF 3.3" jumper'ları 3,3 V konumunda (fabrikadan böyle gelebilir).</td><td>Her iki jumper'ı da 5V tarafına tak.</td></tr>
+<tr><td>Servo dönmüyor, yalnızca tıkırdıyor; ESP32 yeniden başlıyor</td><td>Besleme yetersiz: 9 V pil veya 700 mA USB servo + röleyi taşıyamaz.</td><td>12 V, en az 2 A adaptör (bu kurulumda 3 A).</td></tr>
+<tr><td>Breadboard'un bir yarısındaki modüllere güç gitmiyor</td><td>830 delikli kartlarda kenar güç hatları ortadan bölünmüş.</td><td>Dört hatta da 29-34 arası köprü kablosu.</td></tr>
+<tr><td>Röle hiç kapanmıyor (sürekli çekili)</td><td>Aktif düşük 5 V modül, 3,3 V HIGH'ı "kapalı" saymıyor.</td><td><code>OUTPUT_OPEN_DRAIN</code>: pin bırakılır, modülün pull-up'ı 5 V'a çeker (<code>Relay.h</code>).</td></tr>
+<tr><td>ESP32'ye 5Vin'den güç verilemiyor</td><td>YD-ESP32-S3 klon kartında 5Vin pini, arkadaki IN-OUT pedi lehimlenmeden bağlı değil.</td><td>ESP32 USB'den beslenir; 3V3/5V pinleri güç modülüne bağlanmaz.</td></tr>
+<tr><td>Tuşlar yanlış karakter veriyor</td><td>Tuş takımı şerit kablosu ters takılı.</td><td>Ölçülen haritaya göre <code>keypadRows</code>/<code>keypadCols</code> dizileri değiştirildi (<code>config.h</code>).</td></tr>
+<tr><td>LCD boş kalıyor</td><td>I2C sırt kartının adresi farklı.</td><td><code>Lcd::kAddress</code> 0x27 yerine 0x3F dene.</td></tr>
+<tr><td>Açılıştan hemen sonra gaz alarmı</td><td>MQ-2 ısıtıcısı ısınana kadar yüksek okur.</td><td>Düğüm ilk 60 sn gaz değerini 0 gönderir (<code>kGasWarmupMs</code>); eşiği ısınma sonrası panel değerine göre ayarla.</td></tr>
+<tr><td>PIR sürekli tetikli kalıyor</td><td>Modülün gecikme (süre) trimpotu uzun ayarlı.</td><td>İki turuncu trimpotu saat yönünün tersine sonuna kadar çevir (süre ~3 sn).</td></tr>
+<tr><td>Servo dururken vızıldıyor</td><td>Sürekli PWM ile pozisyonu korumaya çalışıyor.</td><td>Hareketten 700 ms sonra <code>servo_.release()</code> (<code>kServoSettleMs</code>).</td></tr>
+<tr><td>RF menzili kısa</td><td>Antensiz alıcı.</td><td>Alıcının ANT deliğine 17,3 cm (433 MHz'in çeyrek dalga boyu) düz tel.</td></tr>
+<tr><td>ESP32 pinini 5 V sinyalden koruma</td><td>RF alıcı 5 V çıkış verir.</td><td>4,7 kΩ / 10 kΩ bölücü (≈3,4 V).</td></tr>
+<tr><td>Nano yüklenmiyor</td><td>Klon kartta eski önyükleyici.</td><td>Arduino IDE: İşlemci "ATmega328P (Old Bootloader)".</td></tr>
+<tr><td>AWS'ye bağlanamıyor (açılışta)</td><td>TLS saat ister; NTP gelmeden sertifika "geçerli değil" görünür.</td><td>Saat <code>kMinValidEpoch</code>'u geçene kadar bağlantı denenmez.</td></tr>
+</table>
+<div class="why"><b>Genel ders:</b> Gömülü sistem hatalarının büyük kısmı yazılımdan değil güçten (yetersiz akım, yanlış gerilim seviyesi, ortak toprak eksikliği) kaynaklanır. Belirti çoğu zaman yanıltıcıdır (LCD bozuk yazıyor, ama sorun güç jumper'ı). Önce besleme ölçülmelidir.</div>
+</section>
+
+<!-- ================= 13 ================= -->
+<section class="major" id="s13">
+<h2><span class="num">13</span>Sınav ve sunum soruları</h2>
+<dl class="qa">
+<dt>1. Bu sistemde kenar (edge) bilişim nerede ve neden önemli?</dt>
+<dd>ESP32 merkez, alarm ve erişim kararlarını buluta sormadan kendisi verir. İnternet kesilse veya gecikse de güvenlik işlevleri çalışır; bulut yalnızca gecikmeye dayanıklı fan/vana kararını verir.</dd>
+<dt>2. Neden <code>delay()</code> kullanılmıyor?</dt>
+<dd><code>delay()</code> işlemciyi bloke eder; bu sürede kart, tuş, RF paketi ve web isteği kaçırılır. Bunun yerine her sınıf bir bitiş zamanı saklar ve <code>update()</code> içinde <code>millis()</code> ile kontrol eder.</dd>
+<dt>3. Gaz alarmında histerezis nedir, değerleri nelerdir?</dt>
+<dd>Açma ve kapama için iki ayrı eşik: merkezde 100'de açılır, 80'de kapanır. Lambda'da fan 35 °C/100 gazda açılır, 32 °C ve 80 gazın altına inince kapanır. Eşik çevresindeki gürültünün sürekli aç/kapa yaptırmasını önler.</dd>
+<dt>4. RF paketinin yapısını anlatın.</dt>
+<dd>32 bit: 3 bit sihirli sayı (101), 2 bit düğüm, 1 bit hareket, 8 bit gaz, 7 bit sıcaklık, 7 bit nem, 4 bit checksum (28 bitlik gövdenin 7 nibble'ının XOR'u).</dd>
+<dt>5. 433 MHz bağlantının zayıf yönleri nelerdir?</dt>
+<dd>Tek yönlü (ACK yok), şifresiz, kimlik doğrulamasız, karıştırmaya (jamming) ve tekrar saldırısına açık. Güvenilirlik 4 kez tekrar ve 15 sn zaman aşımıyla sağlanıyor.</dd>
+<dt>6. Röle neden open-drain sürülüyor?</dt>
+<dd>Aktif düşük 5 V röle modülü kapanmak için girişin 5 V'a yakın olmasını ister; ESP32'nin 3,3 V'u yetmez. Open-drain'de pin bırakılır ve modülün pull-up'ı girişi 5 V'a çeker.</dd>
+<dt>7. RF alıcı neden gerilim bölücüyle bağlanıyor?</dt>
+<dd>Alıcı 5 V sinyal verir, ESP32 pinleri 3,3 V'tur. 4,7k/10k bölücü 5 V'u yaklaşık 3,4 V'a indirir.</dd>
+<dt>8. Cihaz AWS'ye nasıl kimlik kanıtlar?</dt>
+<dd>X.509 cihaz sertifikası ve özel anahtarla karşılıklı TLS (port 8883). Sunucu da Amazon Root CA 1 ile doğrulanır. İstemci kimliği thing adı olmalıdır.</dd>
+<dt>9. IoT politikasında "en az yetki" nasıl sağlanıyor?</dt>
+<dd><code>${iot:Connection.Thing.ThingName}</code> değişkeniyle her cihaz yalnızca kendi istemci kimliğiyle bağlanabilir, yalnızca <code>factory/&lt;kendi adı&gt;/*</code> ve kendi Shadow update konusuna yayın yapabilir, yalnızca kendi delta konusuna abone olabilir.</dd>
+<dt>10. Device Shadow'da desired, reported ve delta nedir?</dt>
+<dd>desired: bulutun istediği durum (Lambda yazar). reported: cihazın bildirdiği gerçek durum. delta: ikisi farklıysa AWS'nin cihaza gönderdiği fark. Cihaz çevrimdışıyken de komut saklanır.</dd>
+<dt>11. Lambda neden Shadow'u okuyup ancak değişiklikte yazıyor?</dt>
+<dd>Lambda durumsuzdur; fanın şu anki durumunu (histerezis için) Shadow'dan öğrenir. Değişmeyen kararı yazmamak gereksiz mesaj ve maliyeti önler.</dd>
+<dt>12. DynamoDB'de TTL ne işe yarar?</dt>
+<dd>Her kayda <code>expires</code> = şimdi + 7 gün yazılır; süre dolunca DynamoDB kaydı ücretsiz siler. Depolama ve maliyet sınırsız büyümez.</dd>
+<dt>13. PC sunucusu tekrar gelen olayları nasıl ayıklıyor?</dt>
+<dd>Merkez her POST'ta son 20 olayı gönderir; SQLite'ta <code>UNIQUE(day, device_time, message)</code> kısıtı ve <code>INSERT OR IGNORE</code> ile aynı olay ikinci kez eklenmez.</dd>
+<dt>14. PC kapalıyken merkez neden yavaşlamıyor?</dt>
+<dd>HTTP isteği 800 ms'de zaman aşımına uğrar ve başarısız denemeden sonra 30 sn beklenir (geri çekilme). Böylece döngü en fazla 30 sn'de bir 0,8 sn bekler.</dd>
+<dt>15. EventSink kullanmanın faydası nedir?</dt>
+<dd>Olay üreten sınıflar (AlarmSystem, NodeMonitor, ...) olayların log'a mı Telegram'a mı gideceğini bilmez; tek bir fonksiyon (<code>report()</code>) yönlendirir. Bu gevşek bağlılık, yeni bir çıkış eklemeyi tek satıra indirir.</dd>
+<dt>16. Neden CloudFormation?</dt>
+<dd>Tüm bulut kaynakları ve izinler tek dosyada, tekrarlanabilir ve gözden geçirilebilir; <code>destroy.ps1</code> ile tamamen kaldırılabilir, unutulan kaynak kalmaz.</dd>
+</dl>
+</section>
+
+<!-- ================= 14 ================= -->
+<section class="major" id="s14">
+<h2><span class="num">14</span>Sözlük</h2>
+<dl class="gloss">
+<dt>ACK (onay)</dt><dd>Alıcının mesajı aldığını gönderene bildirmesi. 433 MHz bağlantıda yoktur.</dd>
+<dt>Aktif düşük (active-low)</dt><dd>Girişin LOW olduğunda "açık" anlamına geldiği sinyal mantığı. Röle modülü böyledir.</dd>
+<dt>Captive portal</dt><dd>Bir Wi-Fi ağına bağlanınca tüm adreslerin bir kurulum/giriş sayfasına yönlendirilmesi.</dd>
+<dt>Checksum (sağlama toplamı)</dt><dd>Verinin bozulup bozulmadığını anlamak için verilerden hesaplanan küçük değer. Burada 4 bitlik XOR.</dd>
+<dt>CloudFormation</dt><dd>AWS kaynaklarını YAML/JSON şablonla tanımlayıp kuran altyapı-kod (IaC) servisi.</dd>
+<dt>CloudWatch Logs</dt><dd>AWS'nin log toplama servisi; Lambda'nın <code>print</code> çıktıları buraya düşer.</dd>
+<dt>Device Shadow</dt><dd>AWS IoT'de bir cihazın istenen (desired) ve bildirilen (reported) durumunu saklayan JSON belge; fark (delta) cihaza gönderilir.</dd>
+<dt>DynamoDB</dt><dd>AWS'nin sunucusuz anahtar-değer / belge veritabanı.</dd>
+<dt>Gerilim bölücü</dt><dd>Seri iki dirençle bir gerilimi orantılı olarak düşüren devre: V<sub>out</sub> = V<sub>in</sub> × R2 / (R1 + R2).</dd>
+<dt>Histerezis</dt><dd>Açma ve kapama için farklı eşik kullanarak eşik çevresindeki titreşimi önleme.</dd>
+<dt>I2C</dt><dd>İki telli (SDA veri, SCL saat) adreslemeli seri veri yolu. LCD bu yolla bağlıdır (adres 0x27).</dd>
+<dt>IaC (Infrastructure as Code)</dt><dd>Altyapının elle değil, sürüm kontrolündeki kodla tanımlanması.</dd>
+<dt>IoT Policy</dt><dd>Bir sertifikanın AWS IoT'de hangi işlemleri (Connect, Publish, Subscribe, Receive) hangi kaynaklarda yapabileceğini belirleyen JSON izin belgesi.</dd>
+<dt>IoT Rule</dt><dd>MQTT mesajlarını SQL benzeri bir sorguyla süzüp DynamoDB, Lambda gibi hedeflere ileten AWS IoT kuralı.</dd>
+<dt>ISM bandı</dt><dd>Lisanssız kullanılabilen endüstriyel/bilimsel/tıbbi radyo frekansları (433 MHz, 2,4 GHz).</dd>
+<dt>JSON</dt><dd>Anahtar-değer tabanlı, insan tarafından okunabilir veri biçimi.</dd>
+<dt>Lambda</dt><dd>AWS'nin olayla tetiklenen sunucusuz fonksiyon servisi.</dd>
+<dt>mDNS</dt><dd>Yerel ağda DNS sunucusu olmadan <code>ad.local</code> biçiminde isim çözme (multicast DNS).</dd>
+<dt>millis()</dt><dd>Arduino'da açılıştan beri geçen milisaniye; yaklaşık 49,7 günde taşar.</dd>
+<dt>MQTT</dt><dd>Yayınla/abone ol (publish/subscribe) modelli, hafif mesajlaşma protokolü. Mesajlar bir aracı (broker) üzerinden konulara (topic) gönderilir.</dd>
+<dt>mTLS</dt><dd>İki tarafın da sertifikayla kimlik kanıtladığı TLS.</dd>
+<dt>NTP</dt><dd>Ağ üzerinden saat eşitleme protokolü.</dd>
+<dt>NVS</dt><dd>ESP32'nin flash belleğinde anahtar-değer saklayan kalıcı depolama alanı.</dd>
+<dt>OOK</dt><dd>On-Off Keying: taşıyıcının varlığı/yokluğuyla bit gönderen basit modülasyon (ucuz 433 MHz modüller).</dd>
+<dt>Open-drain</dt><dd>Pinin yalnızca LOW'a çekebildiği, "HIGH" durumunda serbest (yüksek empedans) kaldığı çıkış modu; HIGH seviyesini harici pull-up belirler.</dd>
+<dt>PEM</dt><dd>Sertifika ve anahtarların <code>-----BEGIN ...-----</code> satırlarıyla çevrili base64 metin biçimi.</dd>
+<dt>Pull-up direnci</dt><dd>Bir hattı boştayken besleme gerilimine çeken direnç.</dd>
+<dt>PWM</dt><dd>Darbe genişlik modülasyonu. Servo 50 Hz PWM'deki darbe genişliğine göre açı alır.</dd>
+<dt>QoS</dt><dd>MQTT teslim garantisi seviyesi: 0 (en fazla bir kez), 1 (en az bir kez), 2 (tam bir kez).</dd>
+<dt>REST</dt><dd>Kaynakların URL ile, işlemlerin HTTP yöntemleriyle (GET, POST) ifade edildiği API tarzı.</dd>
+<dt>SPI</dt><dd>Saat (SCK), MOSI, MISO ve seçme (SS) hatlı hızlı seri veri yolu. RC522 bu yolla bağlıdır.</dd>
+<dt>SQLite</dt><dd>Tek dosyada çalışan, sunucusuz ilişkisel veritabanı.</dd>
+<dt>TLS</dt><dd>Taşıma katmanı güvenliği: şifreleme, bütünlük ve sertifikayla kimlik doğrulama sağlar.</dd>
+<dt>TTL (Time To Live)</dt><dd>Bir kaydın yaşam süresi; DynamoDB'de süresi dolan kayıtlar otomatik silinir.</dd>
+<dt>X.509</dt><dd>Açık anahtar sertifikalarının standart biçimi; kimlik, açık anahtar ve imzalayan otoriteyi içerir.</dd>
+</dl>
+</section>
+
+<!-- ================= 15 ================= -->
+<section class="major" id="s15">
+<h2><span class="num">15</span>Ek: Kodda gözlenen tutarsızlıklar</h2>
+<p>Bu belge hazırlanırken fark edilen ve sunumda sorulabilecek noktalar. Kod değiştirilmemiştir.</p>
+<ol>
+<li><b>Kurulum portalı bağlanmamış:</b> <code>DeviceSettings</code>, <code>SetupPortal</code>, <code>setup_page.h</code> ve <code>config.h</code> içindeki <code>Setup::</code>, <code>kSetupWindowMs</code>, <code>Keypad4x4::kSetup</code>, <code>kSetup*</code> mesajları mevcut ama <code>security_hub.ino</code> bunları kullanmıyor. <code>SetupPortal.cpp</code> yorumunda belirtilen <code>/panel</code> yolu <code>WebPanel</code>'de yok (panel <code>/</code>'de). <code>Cloud::kEnabled</code> yorumu "setup portal or aws_secrets.h" diyor; <code>CloudLink</code> yalnızca <code>aws_secrets.h</code> kullanıyor.</li>
+<li><b>Olası derleme sorunu:</b> <code>SetupPortal.cpp</code> <code>Secrets::kSetupApPassword</code> kullanıyor; bu sabit <code>secrets.example.h</code> şablonunda yok. Arduino IDE sketch klasöründeki tüm .cpp dosyalarını derlediği için, <code>secrets.h</code> bu sabiti içermiyorsa proje derlenmez (secrets.h bu çalışmada okunmadı, doğrulanamadı).</li>
+<li><b>Adaptör akımı:</b> README ve breadboard rehberi "12 V, en az 2 A" diyor; bu kurulumda 3 A kullanıldığı belirtiliyor. Çelişki değil ama belgeler güncellenebilir.</li>
+<li><b>README kütüphane listesi eksik:</b> AWS için gereken <code>PubSubClient</code> README kurulum adımında yok. README mimari şeması ve metni AWS katmanından hiç bahsetmiyor.</li>
+<li><b>Bulutta olay kopyaları:</b> <code>CloudLink::connect()</code> her yeniden bağlanmada tamponda duran olayları yeniden yayınlar. <code>EventsTable</code> anahtarı sunucu zaman damgası (<code>ts</code>) olduğu için daha önce iletilmiş olaylar DynamoDB'de yeni kayıt olarak çoğalabilir (PC tarafındaki gibi bir UNIQUE ayıklaması yok).</li>
+<li><b>Yerel otomatik fan yok:</b> Gaz alarmında fan/vana yalnızca Lambda kararıyla açılıyor; internet yoksa otomatik havalandırma devreye girmiyor (siren yine çalışıyor). Akıllı fabrika yorumunda bu bir eksik sayılabilir.</li>
+<li><b>Panel ve bulut aynı röleyi sürüyor:</b> Yerel paneldeki röle düğmesi ve Lambda'nın <code>fan</code> kararı aynı çıkışı kontrol ediyor; aralarında öncelik kuralı yok. Elle değişiklik Shadow <code>reported</code>'a yalnızca bir sonraki delta veya yeniden bağlanmada yansır.</li>
+<li><b>Bloklama istisnaları:</b> Bloklamayan döngü ilkesine üç istisna var: açılıştaki 15 sn'lik Wi-Fi bekleme döngüsü, <code>TelegramNotifier</code> (yorumuna göre mesaj başına ~1 sn, zaman aşımı 5 sn; varsayılan kapalı) ve MQTT/TLS bağlantı denemesi (süresi kodda sınırlanmamış).</li>
+<li><b>Sıcaklık eşikleri farklı:</b> Mavi LED 30 °C'de (<code>kTempHighC</code>), bulut fanı 35 °C'de açılıyor. Amaçları farklı (gösterge ve eylem) ama sunumda karıştırılmamalı.</li>
+<li><b>Kullanılmayan sabit:</b> <code>room_node/config.h</code> içindeki <code>Timing::kLedBlinkMs</code> kodda kullanılmıyor. Düğümün yerel gaz buzzer'ında histerezis yok.</li>
+<li><b>Giriş gecikmesi yok, kurma doğrulamasız:</b> Armed iken hareket anında alarm verir (yetkili kişinin şifre girmesi için süre yok); <code>A</code> tuşu kimlik doğrulamadan kurar.</li>
+<li><b>Telegram TLS doğrulaması kapalı:</b> <code>client.setInsecure()</code> ("demo project"), ortadaki adam saldırısına açık; özellik varsayılan kapalı.</li>
+</ol>
+</section>
+
+</div>
+</body>
+</html>

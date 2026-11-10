@@ -1,0 +1,6 @@
+firmware/security_hub/secrets.h
+pc-dashboard/config.json
+pc-dashboard/telemetry.db
+__pycache__/
+firmware/security_hub/aws_secrets.h
+cloud/.certs/

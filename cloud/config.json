@@ -1,0 +1,13 @@
+{
+  "region": "eu-central-1",
+  "stack_name": "iot-guvenlik",
+  "thing_name": "hub01",
+  "topic_prefix": "factory",
+  "thresholds": {
+    "temp_on": 35,
+    "temp_off": 32,
+    "gas_on": 100,
+    "gas_off": 80
+  },
+  "retention_days": 7
+}

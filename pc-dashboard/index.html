@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Güvenlik Kontrol Merkezi</title>
+<style>
+/* Layout: control-room console. Status ring + chips on top, node sensor cards, charts, event feed. */
+:root {
+  --bg: #080c11; --panel: #0f151d; --panel2: #131b25; --line: #1e2a37; --fg: #dbe6f0; --muted: #7b8ea3;
+  --ok: #3ddc97; --armed: #36c5f0; --warn: #f5a524; --bad: #ff4d5e; --violet: #a78bfa;
+  --mono: "JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+  --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #10202e 0%, var(--bg) 60%); color: var(--fg);
+  font-family: var(--sans); min-height: 100vh; padding: 18px 16px 32px; }
+body.alarm::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50;
+  box-shadow: inset 0 0 160px 40px rgba(255, 77, 94, .55); animation: vignette 1s ease-in-out infinite; }
+@keyframes vignette { 50% { box-shadow: inset 0 0 80px 10px rgba(255, 77, 94, .2); } }
+main { max-width: 1240px; margin: 0 auto; display: grid; gap: 16px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand svg { width: 38px; height: 38px; }
+.brand h1 { margin: 0; font-size: 20px; letter-spacing: .04em; font-weight: 600; }
+.brand small { display: block; color: var(--muted); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+.pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { font: 600 12px var(--mono); padding: 7px 12px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line);
+  display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot.on { background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+.dot.off { background: var(--bad); }
+.card { background: linear-gradient(180deg, var(--panel2), var(--panel)); border: 1px solid var(--line); border-radius: 16px; padding: 18px; min-width: 0; }
+.label { font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+.banner { display: none; background: var(--bad); color: #fff; font-weight: 700; letter-spacing: .08em; text-align: center;
+  padding: 12px; border-radius: 12px; animation: blink 1s steps(2) infinite; }
+body.alarm .banner { display: block; }
+@keyframes blink { 50% { opacity: .55; } }
+.hero { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 24px; align-items: center; }
+.ring { position: relative; width: 240px; height: 240px; margin: auto; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring .track { stroke: var(--line); }
+.ring .arc { stroke: var(--muted); stroke-linecap: round; transition: stroke-dashoffset .8s ease, stroke .4s; filter: drop-shadow(0 0 8px currentColor); }
+.ring .center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ring .state { font-size: 26px; font-weight: 700; letter-spacing: .04em; }
+.ring .sub { color: var(--muted); font: 500 13px var(--mono); margin-top: 6px; }
+.ring.armed .arc { animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .55; } }
+.chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.chip { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; gap: 12px; align-items: center; }
+.chip svg { width: 28px; height: 28px; flex: none; }
+.chip b { display: block; font-size: 17px; }
+.chip span { color: var(--muted); font-size: 12px; }
+.nodes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); gap: 16px; }
+.node-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.node-head h2 { margin: 0; font-size: 16px; }
+.gauges { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.gauge { text-align: center; }
+.gauge svg { width: 100%; max-width: 140px; }
+.gauge .g-track { stroke: var(--line); }
+.gauge .g-arc { stroke-linecap: round; transition: stroke-dasharray .8s ease, stroke .4s; }
+.gauge .g-val { font: 700 20px var(--mono); fill: var(--fg); }
+.gauge .g-unit { font: 500 10px var(--mono); fill: var(--muted); }
+.gauge p { margin: 4px 0 0; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.radar { position: relative; width: 100%; max-width: 110px; aspect-ratio: 1; margin: 6px auto 0; border-radius: 50%;
+  background: repeating-radial-gradient(circle, transparent 0 17px, rgba(54, 197, 240, .18) 18px 19px), #061018; border: 1px solid #12324a; overflow: hidden; }
+.radar::before { content: ""; position: absolute; inset: 0; background: conic-gradient(from 0deg, rgba(54, 197, 240, .45), transparent 70deg);
+  animation: sweep 2.6s linear infinite; }
+@keyframes sweep { to { transform: rotate(360deg); } }
+.radar .blip { position: absolute; left: 58%; top: 34%; width: 12px; height: 12px; border-radius: 50%; background: var(--warn);
+  box-shadow: 0 0 14px var(--warn); opacity: 0; }
+.radar.motion .blip { animation: ping 1.2s ease-out infinite; }
+@keyframes ping { 0% { opacity: 1; transform: scale(.6); } 100% { opacity: 0; transform: scale(2.4); } }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 16px; }
+canvas { width: 100%; height: 200px; display: block; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.feed { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow: auto; }
+.feed li { display: grid; grid-template-columns: 76px 14px minmax(0, 1fr); gap: 10px; align-items: center; padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.feed time { font: 500 12px var(--mono); color: var(--muted); }
+.feed .fd { width: 10px; height: 10px; border-radius: 50%; background: var(--armed); }
+.feed li.urgent { color: #ffd2d6; }
+.feed li.urgent .fd { background: var(--bad); box-shadow: 0 0 10px var(--bad); }
+.empty { color: var(--muted); font-size: 14px; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.controls button { font: 600 14px var(--sans); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px; cursor: pointer; transition: border-color .2s, background .2s; }
+.controls button:hover:not(:disabled) { border-color: var(--armed); background: #0d1c26; }
+.controls button:focus-visible { outline: 2px solid var(--armed); outline-offset: 2px; }
+.controls button:disabled { opacity: .45; cursor: not-allowed; }
+.controls button.warn { border-color: #5a2a31; }
+.cmd-status { font: 600 11px var(--mono); padding: 3px 8px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); }
+.cmd-status.done { color: var(--ok); } .cmd-status.sent, .cmd-status.pending { color: var(--warn); } .cmd-status.failed, .cmd-status.expired { color: var(--bad); }
+.feed li.cmd { grid-template-columns: 76px minmax(0, 1fr) auto; }
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; }
+  .gauges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 4 40 10v12c0 10-7 18-16 22C15 40 8 32 8 22V10L24 4Z" stroke="#36c5f0" stroke-width="2.5"/><path d="M17 24l5 5 9-10" stroke="#3ddc97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><h1>Güvenlik Kontrol Merkezi</h1><small>ESP32-S3 merkez · 433 MHz sensör ağı</small></div>
+    </div>
+    <div class="pills">
+      <span class="pill"><i class="dot" id="linkDot"></i><span id="linkText">Bağlanıyor</span></span>
+      <span class="pill" id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <div class="banner" id="banner">ALARM</div>
+
+  <section class="card hero">
+    <div class="ring" id="ring">
+      <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="9"/>
+        <circle class="arc" id="ringArc" cx="60" cy="60" r="52" fill="none" stroke-width="9" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg>
+      <div class="center"><div class="state" id="stateText">---</div><div class="sub" id="stateSub">veri bekleniyor</div></div>
+    </div>
+    <div>
+      <p class="label">Sistem</p>
+      <div class="chips">
+        <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" id="doorIcon"><rect x="5" y="11" width="14" height="10" rx="2"/><path id="shackle" d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div><b id="doorText">-</b><span>Kapı kilidi</span></div></div>
+        <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg><div><b id="relayText">-</b><span>Röle çıkışı</span></div></div>
+        <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><b id="uptimeText">-</b><span>Çalışma süresi</span></div></div>
+        <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/></svg><div><b id="nodeCount">-</b><span>Çevrimiçi düğüm</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <p class="label">Uzaktan kontrol</p>
+    <div class="controls" id="controls">
+      <button data-cmd="arm">Sistemi kur</button>
+      <button data-cmd="disarm">Devre dışı bırak</button>
+      <button data-cmd="door">Kapıyı / vanayı aç</button>
+      <button data-cmd="relay_on">Fanı aç (röle)</button>
+      <button data-cmd="relay_off">Fanı kapat (röle)</button>
+      <button data-cmd="test">Modül testi</button>
+    </div>
+    <ul class="feed" id="cmdFeed"><li class="empty">Henüz komut gönderilmedi</li></ul>
+  </section>
+
+  <section class="nodes" id="nodes"><div class="card empty">Henüz düğüm verisi yok. Merkezin bu PC'ye veri göndermesi bekleniyor.</div></section>
+
+  <section class="charts">
+    <div class="card"><p class="label">Sıcaklık ve nem · son 60 dk</p><canvas id="climateChart"></canvas>
+      <div class="legend"><span><i style="background:#f5a524"></i>Sıcaklık (°C)</span><span><i style="background:#36c5f0"></i>Nem (%)</span></div></div>
+    <div class="card"><p class="label">Gaz seviyesi · son 60 dk</p><canvas id="gasChart"></canvas>
+      <div class="legend"><span><i style="background:#a78bfa"></i>Gaz (0-255)</span><span><i style="background:#ff4d5e"></i>Alarm eşiği</span></div></div>
+  </section>
+
+  <section class="card"><p class="label">Olay akışı</p><ul class="feed" id="feed"><li class="empty">Kayıt yok</li></ul></section>
+</main>
+
+<script>
+const STATES = {
+  disarmed: { text: 'DEVRE DIŞI', color: '#7b8ea3' },
+  arming: { text: 'KURULUYOR', color: '#f5a524' },
+  armed: { text: 'KURULU', color: '#36c5f0' },
+  triggered: { text: 'ALARM', color: '#ff4d5e' },
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let lastAlarm = false;
+
+function fmtUptime(s) {
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h ? `${h} sa ${m} dk` : `${m} dk ${s % 60} sn`;
+}
+
+function gauge(label, value, max, unit, color, limit) {
+  const pct = Math.max(0, Math.min(100, value / max * 100));
+  const tick = limit != null ? (() => {
+    const a = Math.PI * (1 - limit / max), x = 60 + 46 * Math.cos(a), y = 62 - 46 * Math.sin(a);
+    const x2 = 60 + 56 * Math.cos(a), y2 = 62 - 56 * Math.sin(a);
+    return `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" stroke="#ff4d5e" stroke-width="2.5"/>`;
+  })() : '';
+  return `<div class="gauge"><svg viewBox="0 0 120 74">
+    <path class="g-track" d="M10 62 A50 50 0 0 1 110 62" fill="none" stroke-width="10" pathLength="100"/>
+    <path class="g-arc" d="M10 62 A50 50 0 0 1 110 62" fill="none" stroke-width="10" pathLength="100" stroke="${color}" stroke-dasharray="${pct} 100"/>
+    ${tick}<text class="g-val" x="60" y="58" text-anchor="middle">${value}</text>
+    <text class="g-unit" x="60" y="71" text-anchor="middle">${unit}</text></svg><p>${label}</p></div>`;
+}
+
+function renderNodes(snap) {
+  const nodes = snap.nodes || [];
+  $('nodeCount').textContent = `${nodes.filter(n => n.online).length} / ${nodes.length}`;
+  if (!nodes.length) return;
+  $('nodes').innerHTML = nodes.map(n => {
+    const hot = n.temp >= snap.tempHigh, gasHigh = n.gas >= snap.gasLimit;
+    return `<div class="card"><div class="node-head"><h2>Oda düğümü ${n.id}</h2>
+      <span class="pill"><i class="dot ${n.online ? 'on' : 'off'}"></i>${n.online ? `${n.age} sn önce` : 'çevrimdışı'}</span></div>
+      <div class="gauges">
+        ${gauge('Sıcaklık', n.temp, 50, '°C', hot ? '#ff4d5e' : '#f5a524', snap.tempHigh)}
+        ${gauge('Nem', n.hum, 100, '%', '#36c5f0')}
+        ${gauge('Gaz', n.gas, 255, 'seviye', gasHigh ? '#ff4d5e' : '#a78bfa', snap.gasLimit)}
+        <div class="gauge"><div class="radar ${n.motion ? 'motion' : ''}"><i class="blip"></i></div><p>${n.motion ? 'Hareket var' : 'Hareket yok'}</p></div>
+      </div></div>`;
+  }).join('');
+}
+
+function renderLatest(data) {
+  $('linkDot').className = 'dot ' + (data.online ? 'on' : 'off');
+  $('linkText').textContent = data.snapshot ? (data.online ? `Merkez çevrimiçi · ${data.age} sn` : `Merkez sessiz · ${Math.round(data.age)} sn`) : 'Merkezden veri yok';
+  const snap = data.snapshot;
+  if (!snap) return;
+  const st = STATES[snap.state] || STATES.disarmed;
+  const arc = $('ringArc');
+  arc.style.stroke = st.color; arc.style.color = st.color;
+  let fill = snap.state === 'disarmed' ? 0 : 100;
+  let sub = snap.state === 'armed' ? 'hareket izleniyor' : snap.state === 'triggered' ? 'izinsiz hareket' : 'beklemede';
+  if (snap.state === 'arming') { fill = (1 - snap.armLeft / snap.armDelay) * 100; sub = `${snap.armLeft} sn içinde kurulacak`; }
+  if (snap.gasAlarm) sub = 'gaz / duman algılandı';
+  arc.setAttribute('stroke-dashoffset', String(100 - fill));
+  $('ring').className = 'ring ' + snap.state;
+  $('stateText').textContent = snap.gasAlarm && snap.state !== 'triggered' ? 'GAZ' : st.text;
+  $('stateText').style.color = snap.gasAlarm ? '#ff4d5e' : st.color;
+  $('stateSub').textContent = sub;
+  const alarm = snap.state === 'triggered' || snap.gasAlarm;
+  document.body.classList.toggle('alarm', alarm);
+  $('banner').textContent = snap.gasAlarm ? 'GAZ / DUMAN ALARMI' : 'İZİNSİZ GİRİŞ ALARMI';
+  if (alarm && !lastAlarm && navigator.vibrate) navigator.vibrate([300, 150, 300]);
+  lastAlarm = alarm;
+  $('doorText').textContent = snap.door ? 'Açık' : 'Kilitli';
+  $('doorIcon').style.color = snap.door ? '#f5a524' : '#3ddc97';
+  $('shackle').setAttribute('d', snap.door ? 'M8 11V7a4 4 0 0 1 7.5-2' : 'M8 11V7a4 4 0 0 1 8 0v4');
+  $('relayText').textContent = snap.relay ? 'Açık' : 'Kapalı';
+  $('uptimeText').textContent = fmtUptime(snap.uptime || 0);
+  renderNodes(snap);
+}
+
+function drawChart(canvas, series, opts) {
+  const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const g = canvas.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
+  const pad = { l: 34, r: 8, t: 8, b: 20 }, cw = w - pad.l - pad.r, ch = h - pad.t - pad.b;
+  const now = Date.now() / 1000, t0 = now - opts.minutes * 60;
+  const x = t => pad.l + (t - t0) / (now - t0) * cw, y = v => pad.t + ch - (v - opts.min) / (opts.max - opts.min) * ch;
+  g.strokeStyle = '#1e2a37'; g.fillStyle = '#7b8ea3'; g.font = '11px Consolas, monospace'; g.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const v = opts.min + (opts.max - opts.min) * i / 4, yy = y(v);
+    g.beginPath(); g.moveTo(pad.l, yy); g.lineTo(w - pad.r, yy); g.stroke();
+    g.fillText(Math.round(v), 4, yy + 4);
+  }
+  for (let m = 0; m <= opts.minutes; m += 15) g.fillText(m ? `-${m}dk` : 'şimdi', x(now - m * 60) - 14, h - 4);
+  if (opts.limit != null) { g.strokeStyle = '#ff4d5e'; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(pad.l, y(opts.limit)); g.lineTo(w - pad.r, y(opts.limit)); g.stroke(); g.setLineDash([]); }
+  for (const s of series) {
+    if (!s.points.length) continue;
+    g.strokeStyle = s.color; g.lineWidth = 2; g.beginPath();
+    s.points.forEach(([t, v], i) => (i ? g.lineTo(x(t), y(v)) : g.moveTo(x(t), y(v))));
+    g.stroke();
+    const grad = g.createLinearGradient(0, pad.t, 0, pad.t + ch); grad.addColorStop(0, s.color + '33'); grad.addColorStop(1, s.color + '00');
+    g.lineTo(x(s.points[s.points.length - 1][0]), pad.t + ch); g.lineTo(x(s.points[0][0]), pad.t + ch); g.fillStyle = grad; g.fill();
+    const [lt, lv] = s.points[s.points.length - 1]; g.fillStyle = s.color; g.beginPath(); g.arc(x(lt), y(lv), 3.5, 0, 7); g.fill();
+  }
+}
+
+let historyRows = [], gasLimit = null;
+function renderCharts() {
+  const pick = k => historyRows.filter(r => r.node === 0).map(r => [r.ts, r[k]]);
+  drawChart($('climateChart'), [{ color: '#f5a524', points: pick('temp') }, { color: '#36c5f0', points: pick('hum') }], { min: 0, max: 100, minutes: 60 });
+  drawChart($('gasChart'), [{ color: '#a78bfa', points: pick('gas') }], { min: 0, max: 255, minutes: 60, limit: gasLimit });
+}
+
+const CMD_LABELS = { arm: 'Sistemi kur', disarm: 'Devre dışı bırak', door: 'Kapıyı / vanayı aç', relay_on: 'Fanı aç', relay_off: 'Fanı kapat', test: 'Modül testi' };
+const CMD_STATUS = { pending: 'Bekliyor', sent: 'Cihaza iletildi', done: 'Uygulandı', failed: 'Reddedildi', expired: 'Zaman aşımı' };
+function renderCommands(rows) {
+  $('cmdFeed').innerHTML = rows.length ? rows.map(c =>
+    `<li class="cmd"><time>${new Date(c.created * 1000).toLocaleTimeString('tr-TR')}</time><span>${esc(CMD_LABELS[c.command] || c.command)}</span><span class="cmd-status ${esc(c.status)}">${esc(CMD_STATUS[c.status] || c.status)}</span></li>`).join('')
+    : '<li class="empty">Henüz komut gönderilmedi</li>';
+}
+function setControlsEnabled(online) {
+  document.querySelectorAll('#controls button').forEach(b => { b.disabled = !online; b.title = online ? '' : 'Merkez çevrimdışı'; });
+}
+async function sendCommand(cmd) {
+  try {
+    const r = await fetch('/api/command', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cmd }) });
+    if (!r.ok) throw new Error(r.status);
+  } catch { $('linkText').textContent = 'Komut gönderilemedi'; }
+  pollCommands();
+}
+document.querySelectorAll('#controls button').forEach(b => b.addEventListener('click', () => sendCommand(b.dataset.cmd)));
+
+function renderEvents(rows) {
+  $('feed').innerHTML = rows.length ? rows.map(e =>
+    `<li class="${e.urgent ? 'urgent' : ''}"><time>${esc(e.device_time)}</time><i class="fd"></i><span>${esc(e.message)}</span></li>`).join('')
+    : '<li class="empty">Kayıt yok</li>';
+}
+
+async function get(path) { const r = await fetch(path, { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); return r.json(); }
+async function pollLatest() { try { const d = await get('/api/latest'); renderLatest(d); setControlsEnabled(d.online); if (d.snapshot) gasLimit = d.snapshot.gasLimit; } catch { $('linkText').textContent = 'PC sunucusuna ulaşılamıyor'; } }
+async function pollHistory() { try { historyRows = await get('/api/history?minutes=60'); renderCharts(); } catch {} }
+async function pollCommands() { try { renderCommands(await get('/api/commands')); } catch {} }
+async function pollEvents() { try { renderEvents(await get('/api/events')); } catch {} }
+
+setInterval(() => { $('clock').textContent = new Date().toLocaleTimeString('tr-TR'); }, 1000);
+pollLatest(); pollHistory(); pollEvents();
+setControlsEnabled(false); pollCommands();
+setInterval(pollLatest, 2000); setInterval(pollEvents, 5000); setInterval(pollHistory, 15000); setInterval(pollCommands, 2000);
+window.addEventListener('resize', renderCharts);
+</script>
+</body>
+</html>

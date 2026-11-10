@@ -1,0 +1,20 @@
+{
+  "host": "0.0.0.0",
+  "port": 8080,
+  "database": "telemetry.db",
+  "api_key": "secrets.h icindeki kTelemetryKey ile ayni deger",
+  "device_timeout_s": 20,
+  "history_minutes": 60,
+  "events_limit": 100,
+  "dashboard_user": "admin",
+  "command_timeout_s": 60,
+  "allowed_commands": [
+    "arm",
+    "disarm",
+    "door",
+    "relay_on",
+    "relay_off",
+    "test"
+  ],
+  "dashboard_password": "degistir-guclu-bir-sifre"
+}

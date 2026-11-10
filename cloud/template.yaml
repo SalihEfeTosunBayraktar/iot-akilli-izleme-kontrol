@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  IoT security / smart-factory hub on AWS IoT Core. Devices publish telemetry and events over
+  MQTT/TLS; rules store them in DynamoDB and a Lambda decides fan/valve commands via the shadow.
+
+Parameters:
+  ThingName:
+    Type: String
+  TopicPrefix:
+    Type: String
+  TempOn:
+    Type: Number
+  TempOff:
+    Type: Number
+  GasOn:
+    Type: Number
+  GasOff:
+    Type: Number
+  RetentionDays:
+    Type: Number
+
+Resources:
+  TelemetryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: device, AttributeType: S }
+        - { AttributeName: ts, AttributeType: N }
+      KeySchema:
+        - { AttributeName: device, KeyType: HASH }
+        - { AttributeName: ts, KeyType: RANGE }
+      TimeToLiveSpecification: { AttributeName: expires, Enabled: true }
+
+  EventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: device, AttributeType: S }
+        - { AttributeName: ts, AttributeType: N }
+      KeySchema:
+        - { AttributeName: device, KeyType: HASH }
+        - { AttributeName: ts, KeyType: RANGE }
+      TimeToLiveSpecification: { AttributeName: expires, Enabled: true }
+
+  # Each device may only use its own client id, topics and shadow (policy variables).
+  DevicePolicy:
+    Type: AWS::IoT::Policy
+    Properties:
+      PolicyName: !Sub "${AWS::StackName}-device"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: iot:Connect
+            Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${!iot:Connection.Thing.ThingName}"
+          - Effect: Allow
+            Action: iot:Publish
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${TopicPrefix}/${!iot:Connection.Thing.ThingName}/*"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${!iot:Connection.Thing.ThingName}/shadow/update"
+          - Effect: Allow
+            Action: iot:Subscribe
+            Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${!iot:Connection.Thing.ThingName}/shadow/update/delta"
+          - Effect: Allow
+            Action: iot:Receive
+            Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${!iot:Connection.Thing.ThingName}/shadow/update/delta"
+
+  RuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: iot.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: write-tables
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: dynamodb:PutItem
+                Resource: [!GetAtt TelemetryTable.Arn, !GetAtt EventsTable.Arn]
+
+  DecisionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: device-shadow
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [iot:GetThingShadow, iot:UpdateThingShadow]
+                Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thing/${ThingName}"
+
+  DecisionLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-decide"
+      RetentionInDays: 14
+
+  # Real code is uploaded by deploy.ps1 from lambda/decide.py (single source of truth).
+  DecisionFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: DecisionLogs
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-decide"
+      Runtime: python3.12
+      Handler: decide.handler
+      Timeout: 10
+      Role: !GetAtt DecisionRole.Arn
+      Environment:
+        Variables:
+          TEMP_ON: !Ref TempOn
+          TEMP_OFF: !Ref TempOff
+          GAS_ON: !Ref GasOn
+          GAS_OFF: !Ref GasOff
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return {"placeholder": True}
+
+  TelemetryRule:
+    Type: AWS::IoT::TopicRule
+    Properties:
+      TopicRulePayload:
+        AwsIotSqlVersion: "2016-03-23"
+        RuleDisabled: false
+        Sql: !Sub >-
+          SELECT topic(2) AS device, timestamp() AS ts,
+          floor(timestamp() / 1000) + ${RetentionDays} * 86400 AS expires,
+          state, gasAlarm, relay, door, uptime, nodes
+          FROM '${TopicPrefix}/+/telemetry'
+        Actions:
+          - DynamoDBv2:
+              PutItem: { TableName: !Ref TelemetryTable }
+              RoleArn: !GetAtt RuleRole.Arn
+          - Lambda:
+              FunctionArn: !GetAtt DecisionFunction.Arn
+
+  EventsRule:
+    Type: AWS::IoT::TopicRule
+    Properties:
+      TopicRulePayload:
+        AwsIotSqlVersion: "2016-03-23"
+        RuleDisabled: false
+        Sql: !Sub >-
+          SELECT topic(2) AS device, timestamp() * 1000 + (seq % 1000) AS ts,
+          floor(timestamp() / 1000) + ${RetentionDays} * 86400 AS expires,
+          t AS deviceTime, m AS message, u AS urgent, seq
+          FROM '${TopicPrefix}/+/events'
+        Actions:
+          - DynamoDBv2:
+              PutItem: { TableName: !Ref EventsTable }
+              RoleArn: !GetAtt RuleRole.Arn
+
+  DecisionInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DecisionFunction
+      Principal: iot.amazonaws.com
+      SourceArn: !GetAtt TelemetryRule.Arn
+      SourceAccount: !Ref AWS::AccountId
+
+Outputs:
+  DevicePolicyName:
+    Value: !Ref DevicePolicy
+  DecisionFunctionName:
+    Value: !Ref DecisionFunction
+  TelemetryTableName:
+    Value: !Ref TelemetryTable
+  EventsTableName:
+    Value: !Ref EventsTable
